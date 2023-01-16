@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Xfixy.WinUI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Xfixy.WinUI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
