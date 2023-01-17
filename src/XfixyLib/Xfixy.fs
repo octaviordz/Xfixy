@@ -2,15 +2,9 @@
 
 open System
 open System.Collections
-open System.Diagnostics
 open System.IO
 open System.Threading
-open System.Threading.Tasks
-open Microsoft.Extensions.Hosting
-open Microsoft.Extensions.Logging
 open System.Management.Automation
-open Microsoft.Extensions.Configuration
-
 
 module internal PSscript =
     /// <summary>
@@ -29,13 +23,17 @@ module internal PSscript =
             // specify the parameters to pass into the script.
             ps.AddParameters(scriptParameters) |> ignore
             // execute the script and await the result.
-            let! pipelineObjects =
-                ps
-                    .InvokeAsync()
-                    .WaitAsync(ct)
-                    .ConfigureAwait(false)
-            // print the resulting pipeline objects to the console.
-            return pipelineObjects
+            try
+                let! pipelineObjects =
+                    ps
+                        .InvokeAsync()
+                        .WaitAsync(ct)
+                        .ConfigureAwait(false)
+                // print the resulting pipeline objects to the console.
+                return Result.Ok pipelineObjects
+            with
+            | ex ->
+                return Result.Error ex
         }
 
     let loadScriptsAsync (scriptFiles: string array) (ct: CancellationToken) =
@@ -75,71 +73,3 @@ and internal Unsubscriber(observers: Generic.List<IObserver<string>>, observer: 
                 && observers.Contains observer
             then
                 observers.Remove observer |> ignore
-
-[<AutoOpen>]
-module internal Control =
-    type FetchScript =
-        | Fetch
-        | Not
-
-// https://learn.microsoft.com/en-us/dotnet/core/extensions/windows-service
-// New-Service -Name Xfinixy -BinaryPathName C:\Users\...\Xfixy.exe
-type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
-    inherit BackgroundService()
-
-    let messageTracker = Messager()
-
-    member self.OnMessage
-        with public get (): IObservable<string> = messageTracker
-
-    member _.Delay =
-        let delay = configuration.GetValue<int>("Worker:Delay", 3000)
-        delay
-
-    member _.ScriptReloadInterval =
-        let delay = configuration.GetValue<int>("Worker:Script:ReloadIntervalSeconds", 15)
-        delay
-
-    override self.ExecuteAsync(ct: CancellationToken) =
-        task {
-            let stopWatch = Stopwatch()
-            let scriptsPath = configuration["Worker:Scripts-Path"]
-            let mutable cached = dict []
-
-            while not ct.IsCancellationRequested do
-                logger.LogInformation("Worker running at: {time}.", DateTimeOffset.Now)
-
-                let fetchOrNot =
-                    if not stopWatch.IsRunning then
-                        stopWatch.Start()
-                        Fetch
-                    elif stopWatch.Elapsed.TotalSeconds
-                         >= self.ScriptReloadInterval then
-                        Fetch
-                    else
-                        Not
-
-                let! scriptContentDict =
-                    task {
-                        match fetchOrNot with
-                        | Fetch ->
-                            stopWatch.Restart()
-                            let scriptFiles = Directory.GetFiles scriptsPath
-                            let! res = PSscript.loadScriptsAsync scriptFiles ct
-                            cached <- res
-                            return res
-                        | Not -> return cached
-                    }
-
-                for kv in scriptContentDict do
-                    let scriptContent = kv.Value
-                    let parameters: IDictionary = Generic.Dictionary<string, obj>()
-                    let! psDataCollection = PSscript.runScriptAsync scriptContent parameters ct
-
-                    for item in psDataCollection do
-                        let psObjRes = item.BaseObject.ToString()
-                        logger.LogInformation("PowerShell Result: {PSObject}", psObjRes)
-                        messageTracker.Push psObjRes
-
-                do! Task.Delay(self.Delay, ct)
-        }

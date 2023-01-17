@@ -31,7 +31,6 @@ namespace Xfixy.WinUI
         private IHostBuilder CreateHostBuilder(string[] args)
         {
             return Host.CreateDefaultBuilder(args)
-                    //.ConfigureServices((hostContext, services) => services.AddHostedService<Worker>());
                     .ConfigureServices((hostContext, services) =>
                     {
                         services.AddSingleton<Worker>();
