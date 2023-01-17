@@ -37,8 +37,10 @@ namespace Xfixy.WinUI
                         services.AddSingleton<Worker>();
                         services.AddSingleton<IHostedService>(p => p.GetService<Worker>());
                     });
-                    //https://github.com/microsoft/WindowsAppSDK/discussions/2195
-                    //.UseContentRoot(Environment.CurrentDirectory);
+
+            //https://github.com/microsoft/WindowsAppSDK/discussions/2195
+            // AppDomain.CurrentDomain.BaseDirectory
+            // Environment.GetFolderPath(Environment.SpecialFolder.Startup)
         }
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
