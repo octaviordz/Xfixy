@@ -10,7 +10,7 @@
 	<Identity
     Name="192fb5cb-1e77-4ad5-9b8e-5824468bc850"
     Publisher="CN=orc"
-    Version="0.1.4.0" />
+    Version="0.1.6.0" />
 
 	<Properties>
 		<DisplayName>Xfixy.WinUI</DisplayName>
