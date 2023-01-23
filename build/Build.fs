@@ -1,8 +1,6 @@
 ﻿open Fake.Core
 open Fake.DotNet
 open Fake.IO
-open Fake.IO.FileSystemOperators
-open Fake.IO.Globbing.Operators
 open Fake.Core.TargetOperators
 
 type IOPath = System.IO.Path
@@ -14,7 +12,7 @@ let projectOrSolution = "Xfixy.sln"
 let srcPath = "src" |> Path.getFullName
 
 let winUIBinPath =
-    IOPath.Combine(srcPath, "Xfixy.WinUI", "bin")
+    IOPath.Combine(srcPath, "Xfixy.WinUI", "Bin-assets")
     |> Path.getFullName
 
 let srcGlob = "*.??proj"

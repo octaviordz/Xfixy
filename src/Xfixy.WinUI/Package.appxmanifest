@@ -10,7 +10,7 @@
 	<Identity
     Name="192fb5cb-1e77-4ad5-9b8e-5824468bc850"
     Publisher="CN=orc"
-    Version="1.0.0.0" />
+    Version="0.1.4.0" />
 
 	<Properties>
 		<DisplayName>Xfixy.WinUI</DisplayName>
@@ -43,7 +43,7 @@
 			<Extensions>
 				<desktop:Extension
 				Category="windows.startupTask"
-				Executable="bin\Xfixy.exe"
+				Executable="Bin-assets\Xfixy\Xfixy.exe"
 				EntryPoint="Windows.FullTrustApplication">
 					<desktop:StartupTask
 					  TaskId="XfixyStartupTask"
