@@ -32,8 +32,7 @@ module internal PSscript =
                 // print the resulting pipeline objects to the console.
                 return Result.Ok pipelineObjects
             with
-            | ex ->
-                return Result.Error ex
+            | ex -> return Result.Error ex
         }
 
     let loadScriptsAsync (scriptFiles: string array) (ct: CancellationToken) =
@@ -73,3 +72,25 @@ and internal Unsubscriber(observers: Generic.List<IObserver<string>>, observer: 
                 && observers.Contains observer
             then
                 observers.Remove observer |> ignore
+
+module Control =
+    let runScriptAsync (scriptContentDict: Generic.IDictionary<string, string>) (ct: CancellationToken) =
+        task {
+            let result = Generic.Dictionary<string, Result<string, string>>()
+
+            for kv in scriptContentDict do
+                let scriptContent = kv.Value
+                let parameters: IDictionary = Generic.Dictionary<string, obj>()
+                let! res = PSscript.runScriptAsync scriptContent parameters ct
+
+                match res with
+                | Result.Ok psDataCollection ->
+                    for item in psDataCollection do
+                        let psObjRes = item.BaseObject.ToString()
+                        let! res = PSscript.runScriptAsync scriptContent parameters ct
+                        result.Add(kv.Key, (Result.Ok psObjRes))
+                | Result.Error ex ->
+                    result.Add(kv.Key, (Result.Error $"""Error running "{kv.Key}". Error: {ex.GetType()}."""))
+
+            return result
+        }

@@ -77,7 +77,7 @@ namespace Xfixy.WinUI
 
             var app = (App)Application.Current;
             app.WorkerCancellationTokenSource?.Cancel();
-            await Task.Delay(300);
+            await Task.Delay(100);
 
             this.Close();
         }

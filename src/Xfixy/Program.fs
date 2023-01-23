@@ -1,22 +1,26 @@
 namespace Xfixy
 
+open Xfixy.Services
 open System
 open System.IO
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Configuration
+open Microsoft.Extensions.Logging
+open Microsoft.Extensions.Logging.EventSource
 
 module Program =
     let createHostBuilder args =
         Host
             .CreateDefaultBuilder(args)
-            .ConfigureServices(fun hostContext services -> services.AddHostedService<Worker>() |> ignore)
+            .ConfigureServices(fun _hostContext services -> services.AddHostedService<Worker>() |> ignore)
+            .ConfigureLogging(fun _hostingContext logging -> logging.AddEventSourceLogger() |> ignore)
 
     [<EntryPoint>]
     let main args =
-        let host  = createHostBuilder(args).Build()
+        let host = createHostBuilder(args).Build()
         let configuration = host.Services.GetService<IConfiguration>()
-        configuration["Worker:Scripts-Path"] <- Path.Combine(Environment.CurrentDirectory, "ps1-scripts")
+        configuration["Worker:Scripts-Path"] <- Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ps1-scripts")
         host.Run()
 
         0 // exit code

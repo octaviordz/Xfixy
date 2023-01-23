@@ -2,12 +2,17 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.EventSource;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Xaml;
 using System;
+using System.IO.Pipes;
+using System.IO;
 using System.Threading;
 using IOPath = System.IO.Path;
+using Xfixy.Server;
+using Microsoft.Extensions.Logging;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
@@ -35,9 +40,13 @@ namespace Xfixy.WinUI
                     {
                         services.AddSingleton<Worker>();
                         services.AddSingleton<IHostedService>(p => p.GetService<Worker>());
+                    })
+                    .ConfigureLogging((hostingContext, logging) =>
+                    {
+                        logging.AddEventSourceLogger();
                     });
 
-            //https://github.com/microsoft/WindowsAppSDK/discussions/2195
+            // https://github.com/microsoft/WindowsAppSDK/discussions/2195
             // AppDomain.CurrentDomain.BaseDirectory
             // Environment.GetFolderPath(Environment.SpecialFolder.Startup)
         }
@@ -50,7 +59,6 @@ namespace Xfixy.WinUI
             this.InitializeComponent();
             IHost host = CreateHostBuilder(args: null).Build();
             var config = host.Services.GetRequiredService<IConfiguration>();
-            var value = config?.GetValue<int>("Worker:Delay", 4000);
             var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var fullPath = IOPath.Join(localAppData, "Xfixy", "ps1-scripts");
             config["Worker:Scripts-Path"] = fullPath;
