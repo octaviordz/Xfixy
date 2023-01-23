@@ -30,28 +30,6 @@ module internal Control =
         (ExceptionDispatchInfo.Capture ex).Throw()
         Unchecked.defaultof<_>
 
-    let sendAsync (ctx: ExecContext) (pipeClient:NamedPipeClientStream) (message: string) (ct: CancellationToken) =
-        task {
-            if pipeClient.IsConnected then
-                try
-                    let sw = new StreamWriter(pipeClient)
-                    sw.AutoFlush <- true
-                    // Send a 'message' and wait for client to receive it.
-                    do! sw.WriteLineAsync(message.AsMemory(), ct)
-                    pipeClient.WaitForPipeDrain()
-                with
-                | :? IOException as ex ->
-                    // Catch the IOException that is raised if the pipe is broken or disconnected.
-                    ctx.Logger.LogError(
-                        ex,
-                        """[CLIENT] IOError calling sendAsync. with message "{message}".""",
-                        message
-                    )
-                | _ as ex ->
-                    ctx.Logger.LogError(ex, """Error calling sendAsync. with message "{message}".""", message)
-                    reraisePreserveStackTrace ex
-        }
-
     let executeAsync
         (ctx: ExecContext)
         (shareResult: string -> CancellationToken -> Task<unit>)
@@ -162,7 +140,11 @@ type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
 
                     if pipeClient.IsConnected then
                         try
-                            do! sendAsync ctx pipeClient psResultAsString ct
+                            let sw = new StreamWriter(pipeClient)
+                            sw.AutoFlush <- true
+                            // Send a 'message' and wait for client to receive it.
+                            do! sw.WriteLineAsync(psResultAsString.AsMemory(), ct)
+                            pipeClient.WaitForPipeDrain()
                         with
                         | :? IOException as ex ->
                             // Catch the IOException that is raised if the pipe is broken or disconnected.
