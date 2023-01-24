@@ -9,10 +9,10 @@
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
     <PublishProfile>win10-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
-    <EnableMsixTooling>true</EnableMsixTooling>
+    <EnableMsixTooling>false</EnableMsixTooling>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-    <PackageCertificateThumbprint>AA073CD5A71530D4E4BE8E01BE40EC9DDE4B6691</PackageCertificateThumbprint>
+    <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
+    <PackageCertificateThumbprint>D6236CE49E7D4771850488F852B8AFA26F3BF725</PackageCertificateThumbprint>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
@@ -22,25 +22,6 @@
 	<!--<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>-->
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Bin-assets\Debug\**" />
-    <Compile Remove="Bin-assets\Release\**" />
-    <Compile Remove="Bin-assets\x64\**" />
-    <Compile Remove="Bin-assets\x86\**" />
-    <EmbeddedResource Remove="Bin-assets\Debug\**" />
-    <EmbeddedResource Remove="Bin-assets\Release\**" />
-    <EmbeddedResource Remove="Bin-assets\x64\**" />
-    <EmbeddedResource Remove="Bin-assets\x86\**" />
-    <None Remove="Bin-assets\Debug\**" />
-    <None Remove="Bin-assets\Release\**" />
-    <None Remove="Bin-assets\x64\**" />
-    <None Remove="Bin-assets\x86\**" />
-    <Page Remove="Bin-assets\Debug\**" />
-    <Page Remove="Bin-assets\Release\**" />
-    <Page Remove="Bin-assets\x64\**" />
-    <Page Remove="Bin-assets\x86\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Bin-assets\Xfixy\Xfixy.exe" />
     <None Remove="Ps1-scripts\try-reconnect.ps1" />
   </ItemGroup>
 
@@ -85,19 +66,4 @@
   <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
   </PropertyGroup>
-  <ItemGroup>
-    <PRIResource Remove="Bin-assets\Debug\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <PRIResource Remove="Bin-assets\Release\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <PRIResource Remove="Bin-assets\x64\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <PRIResource Remove="Bin-assets\x86\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Bin-assets\Xfixy\Xfixy.exe" />
-  </ItemGroup>
 </Project>

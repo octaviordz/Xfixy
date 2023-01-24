@@ -1,0 +1,7 @@
+https://learn.microsoft.com/en-us/windows/msix/package/create-certificate-package-signing
+
+https://learn.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-packaging-dot-net
+
+https://learn.microsoft.com/en-us/windows/msix/packaging-tool/package-editor
+
+https://learn.microsoft.com/en-us/windows/msix/package/packaging-uwp-apps

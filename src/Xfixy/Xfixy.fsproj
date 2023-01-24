@@ -3,12 +3,13 @@
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <UserSecretsId>dotnet-Xfixy-b40d0979-dcf0-4d69-8348-010254677c62</UserSecretsId>
+    <Platforms>AnyCPU;x64</Platforms>
 	<!--<PublishSingleFile>true</PublishSingleFile>-->
   </PropertyGroup>
 
 
   <ItemGroup>
-    <Content Include="ps1-scripts\try-reconnect.ps1">
+    <Content Include="Ps1-scripts\try-reconnect.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="Program.fs" />
