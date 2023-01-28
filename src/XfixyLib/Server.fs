@@ -29,28 +29,22 @@ type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
                     use sr = new StreamReader(pipeServer)
                     logger.LogTrace("[SERVER] Current TransmissionMode: {0}.", pipeServer.TransmissionMode)
 
-                    let rec loop () =
+                    let rec readAndHandleLine () =
                         task {
                             let! line = sr.ReadLineAsync ct
 
                             if not (isNull line) then
                                 messager.Push line
 
-                            logger.LogInformation("[SERVER] Echo: " + line)
+                            logger.LogTrace("[SERVER] Echo: " + line)
 
-                            if isNull line then
+                            if ct.IsCancellationRequested || isNull line then
                                 return Unchecked.defaultof<_>
                             else
-                                return! loop ()
+                                return! readAndHandleLine ()
                         }
-                    do! loop ()
-                    //let mutable continueLoop = true
-                    //while (not ct.IsCancellationRequested) && continueLoop do
-                    //    let! line = sr.ReadLineAsync ct
-                    //    if not (isNull line) then
-                    //        messager.Push line
-                    //    continueLoop <- not (isNull line)
-                    //    logger.LogInformation("[SERVER] Echo: " + line)
+
+                    do! readAndHandleLine ()
                 with
                 | _ as ex -> logger.LogError(ex, "[SERVER] Error.")
         }

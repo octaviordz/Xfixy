@@ -20,7 +20,7 @@ module Program =
     let main args =
         let host = createHostBuilder(args).Build()
         let configuration = host.Services.GetService<IConfiguration>()
-        configuration["Worker:Scripts-Path"] <- Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ps1-scripts")
+        configuration["Worker:Scripts-Path"] <- Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ps1-scripts")
         host.Run()
 
         0 // exit code

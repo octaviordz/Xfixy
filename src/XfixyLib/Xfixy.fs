@@ -62,11 +62,11 @@ type internal Messager() =
             if not (observers.Contains observer) then
                 observers.Add observer
 
-            new Unsubscriber(observers, observer)
+            new Unsubscriber<string>(observers, observer)
 
-and internal Unsubscriber(observers: Generic.List<IObserver<string>>, observer: IObserver<string>) =
+and internal Unsubscriber<'T>(observers: Generic.List<IObserver<'T>>, observer: IObserver<'T>) =
     interface IDisposable with
-        member self.Dispose() : unit =
+        member _.Dispose() : unit =
             if
                 not (isNull observer)
                 && observers.Contains observer

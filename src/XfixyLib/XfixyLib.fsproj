@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Infrastructure.fs" />
     <Compile Include="Xfixy.fs" />
     <Compile Include="Server.fs" />
     <Compile Include="Services.fs" />
