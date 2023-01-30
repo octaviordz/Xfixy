@@ -39,7 +39,7 @@ type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
                             logger.LogTrace("[SERVER] Echo: " + line)
 
                             if ct.IsCancellationRequested || isNull line then
-                                return Unchecked.defaultof<_>
+                                return ()
                             else
                                 return! readAndHandleLine ()
                         }

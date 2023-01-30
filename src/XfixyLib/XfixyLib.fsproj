@@ -8,8 +8,10 @@
 
   <ItemGroup>
     <Compile Include="Infrastructure.fs" />
+    <Compile Include="Extensions.fs" />
     <Compile Include="Xfixy.fs" />
     <Compile Include="Server.fs" />
+    <Compile Include="Client.fs" />
     <Compile Include="Services.fs" />
   </ItemGroup>
 

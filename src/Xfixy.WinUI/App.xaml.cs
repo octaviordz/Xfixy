@@ -61,7 +61,7 @@ namespace Xfixy.WinUI
             var config = host.Services.GetRequiredService<IConfiguration>();
             var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var fullPath = IOPath.Join(localAppData, "Xfixy", "Ps1-scripts");
-            config["Worker:Scripts-Path"] = fullPath;
+            config["Worker:Scripts-Location"] = fullPath;
             var cts = new CancellationTokenSource();
             this.WorkerCancellationTokenSource = cts;
             host.StartAsync(cts.Token);
