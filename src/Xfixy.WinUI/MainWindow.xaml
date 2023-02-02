@@ -10,8 +10,65 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <TextBlock x:Name="messageTextBox"></TextBlock>
-        <!--<Button x:Name="myButton">Click Me</Button>-->
-    </StackPanel>
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <TabView x:Name="Tabs"
+                 IsAddTabButtonVisible="False"
+                 VerticalAlignment="Stretch"
+                 AllowDropTabs="True"
+                 CanDragTabs="True"
+                 CanReorderTabs="True" >
+            <TabView.TabStripHeader>
+                <Grid x:Name="ShellTitleBarInset" Background="Transparent" />
+            </TabView.TabStripHeader>
+            <TabView.TabStripFooter>
+                <Grid x:Name="CustomDragRegion" Background="Transparent" />
+            </TabView.TabStripFooter>
+            <TabViewItem x:Name="OutputTabViewItem" Header="Output" IsClosable="False">
+                <TabViewItem.IconSource>
+                    <SymbolIconSource Symbol="Comment" />
+                </TabViewItem.IconSource>
+                <Page>
+                    <Page.Resources>
+                        <DataTemplate x:Key="MessageViewTemplate" x:DataType="local:Message">
+                            <Grid Height="Auto" Margin="4">
+                                <StackPanel MinHeight="75" Padding="10, 0, 0, 10" Background="{ThemeResource SystemColorHighlightColor}" CornerRadius="{StaticResource ControlCornerRadius}">
+                                    <TextBlock Text="{x:Bind MsgText}" Padding="0, 10, 0, 0" FontSize="15" Foreground="{ThemeResource SystemColorHighlightTextColor}" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{x:Bind MsgDateTime}" Padding="0, 0, 0, 10" FontSize="12" Foreground="{ThemeResource SystemColorHighlightTextColor}"/>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </Page.Resources>
+                    <StackPanel>
+                        <!--ItemsSource="{x:Bind OutputItems}"-->
+                        <ListView
+                            x:Name="InvertedListView"
+                            ItemTemplate="{StaticResource MessageViewTemplate}"
+                            BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}"
+                            VerticalAlignment="Stretch"
+                            SelectionMode="None">
+
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <ItemsStackPanel
+                                        ItemsUpdatingScrollMode="KeepLastItemInView" 
+                                        VerticalAlignment="Bottom"/>
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                        </ListView>
+                    </StackPanel>
+                </Page>
+            </TabViewItem>
+            <TabViewItem x:Name="ErrorTabViewItem" Header="Error" IsClosable="False">
+                <TabViewItem.IconSource>
+                    <SymbolIconSource Symbol="Placeholder" />
+                </TabViewItem.IconSource>
+            </TabViewItem>
+        </TabView>
+    </Grid>
 </Window>

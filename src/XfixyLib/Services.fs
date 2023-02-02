@@ -9,7 +9,6 @@ open System.Threading.Tasks
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging
 open Microsoft.Extensions.Configuration
-open System.Runtime.ExceptionServices
 open System.Collections
 open Elmish
 
@@ -60,11 +59,6 @@ module internal Control =
     type internal SubscriptionKind =
         | FetchScripts
         | ExecuteScripts
-    // https://stackoverflow.com/questions/7168801/how-to-use-reraise-in-async-workflows-in-f
-    // https://github.com/fsharp/fslang-suggestions/issues/660
-    let inline reraisePreserveStackTrace (ex: exn) =
-        (ExceptionDispatchInfo.Capture ex).Throw()
-        Unchecked.defaultof<_>
 
     let fetchScriptsAsync location ct =
         task {
@@ -79,8 +73,6 @@ module internal Control =
             return ExecuteScripts(Finished(Ok resDict))
         }
 
-    //let updateWith toModel toMsg model (subModel, subCmd) =
-    //    (toModel subModel, Cmd.map toMsg subCmd)
     let updateWith toMsg model (first, subCmd) =
         let _, b = model
         let model = (first, b)

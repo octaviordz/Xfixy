@@ -1,6 +1,5 @@
 ﻿namespace Xfixy.Server
 
-open Xfixy
 open System
 open System.IO
 open System.Threading
@@ -8,6 +7,7 @@ open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging
 open Microsoft.Extensions.Configuration
 open System.IO.Pipes
+open Xfixy.Control
 
 type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
     inherit BackgroundService()
