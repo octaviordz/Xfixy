@@ -25,10 +25,11 @@ type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
             while not ct.IsCancellationRequested do
                 try
                     logger.LogInformation("[SERVER] Worker running at: {time}.", DateTimeOffset.Now)
-                    do! pipeServer.WaitForConnectionAsync()
+                    do! pipeServer.WaitForConnectionAsync(cancellationToken = ct)
                     use sr = new StreamReader(pipeServer)
                     logger.LogTrace("[SERVER] Current TransmissionMode: {0}.", pipeServer.TransmissionMode)
-
+                    //use sw = new StreamWriter(pipeServer)
+                    //do! sw.WriteLineAsync("Get-ProcessID".AsMemory(), ct)
                     let rec readAndHandleLine () =
                         task {
                             let! line = sr.ReadLineAsync ct

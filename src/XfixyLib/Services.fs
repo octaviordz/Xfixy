@@ -12,6 +12,23 @@ open Microsoft.Extensions.Configuration
 open System.Collections
 open Elmish
 
+[<AutoOpen>]
+module internal Internal =
+    type InternalLogLevel = Xfixy.Logging.LogLevel
+
+    let setLogger (logger: ILogger) =
+        Xfixy.Logging.setLogFunc (fun logLevel msgFunc ex msgParameters ->
+            match logLevel with
+            | InternalLogLevel.Trace -> logger.Log(LogLevel.Trace, ex, msgFunc.Invoke(), msgParameters)
+            | InternalLogLevel.Debug -> logger.Log(LogLevel.Debug, ex, msgFunc.Invoke(), msgParameters)
+            | InternalLogLevel.Info -> logger.Log(LogLevel.Information, ex, msgFunc.Invoke(), msgParameters)
+            | InternalLogLevel.Warn -> logger.Log(LogLevel.Warning, ex, msgFunc.Invoke(), msgParameters)
+            | InternalLogLevel.Error -> logger.Log(LogLevel.Error, ex, msgFunc.Invoke(), msgParameters)
+            | InternalLogLevel.Fatal -> logger.Log(LogLevel.Critical, ex, msgFunc.Invoke(), msgParameters)
+            | _ -> ()
+
+            ())
+
 module internal Control =
     open Xfixy.Control
 
@@ -143,11 +160,13 @@ module internal Control =
                     let message =
                         seq {
                             for k in dict.Keys do
-                                let res = dict[k] 
+                                let res = dict[k]
+
                                 let v =
                                     match dict[k] with
                                     | Ok v -> v
                                     | Error err -> err
+
                                 yield Generic.KeyValuePair(k, v)
                         }
                         |> List.ofSeq
@@ -168,6 +187,7 @@ open Control
 
 type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
     inherit BackgroundService()
+    do setLogger logger
 
     override self.ExecuteAsync(ct: CancellationToken) =
         task {
@@ -187,89 +207,6 @@ type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
 
             let scriptsLocation = scriptsPath ()
 
-            //////////////////////////////////////////////////
-            // Client app.
-            //////////////////////////////////////////////////
-            //let mutable pipeClient =
-            //    new NamedPipeClientStream(".", "Xfixy-pipe", PipeDirection.InOut)
-            // Initial model and Cmd for client app.
-
-            ///////////////////////////
-
-            //let shareResultAsync (psResultAsString: string) ct =
-            //    task {
-            //        if not pipeClient.IsConnected then
-            //            try
-            //                do! pipeClient.ConnectAsync(100, ct)
-            //            with
-            //            | :? TimeoutException as ex ->
-            //                logger.LogTrace(ex, "[CLIENT] Timeout error.")
-            //                ()
-
-            //        if pipeClient.IsConnected then
-            //            try
-            //                let sw = new StreamWriter(pipeClient)
-            //                sw.AutoFlush <- true
-            //                // Send a 'message' and wait for client to receive it.
-            //                do! sw.WriteLineAsync(psResultAsString.AsMemory(), ct)
-
-            //                pipeClient.WaitForPipeDrain()
-            //            with
-            //            | :? IOException as ex ->
-            //                // Catch the IOException that is raised if the pipe is broken or disconnected.
-            //                logger.LogWarning(
-            //                    ex,
-            //                    """[CLIENT] IOError calling shareResultAsync with message "{message}".""",
-            //                    psResultAsString
-            //                )
-            //                // If broken create a new pipe.
-            //                pipeClient.Close()
-            //                pipeClient.Dispose()
-            //                pipeClient <- new NamedPipeClientStream(".", "Xfixy-pipe", PipeDirection.InOut)
-            //            | ex when
-            //                (logger.LogError(
-            //                    ex,
-            //                    """[CLIENT] Error calling shareResultAsync with message "{message}".""",
-            //                    psResultAsString
-            //                 )
-
-            //                 false)
-            //                ->
-            //                ()
-            //    }
-
-            //let consumeScriptsResultAsync (model: WorkerModel) =
-            //    task {
-            //        let scriptContentDict = model.ScriptResultDict
-
-            //        match scriptContentDict with
-            //        | HasNotStartedYet -> return ConsumeScriptsCompleted
-            //        | InProgress -> return ConsumeScriptsCompleted
-            //        | Resolved scriptContentDict ->
-            //            let ct = model.CancellationToken
-
-            //            for kv in scriptContentDict do
-            //                let res = scriptContentDict[kv.Key]
-
-            //                match res with
-            //                | Result.Ok psResultAsString ->
-            //                    logger.LogInformation("""PowerShell Result: "{psResultAsString}".""", psResultAsString)
-
-            //                    try
-            //                        do! shareResultAsync psResultAsString ct
-            //                    with
-            //                    | ex when not (ex :? OperationCanceledException) ->
-            //                        logger.LogError(
-            //                            """Error calling shareResult with value: "{psResultAsString}".""",
-            //                            psResultAsString
-            //                        )
-            //                | Result.Error err -> logger.LogError(err)
-
-            //            return ConsumeScriptsCompleted
-            //    }
-
-            //////////////////////////////////////////////////
-            //////////////////////////////////////////////////
             // Initial model and Cmd.
             let init (arg) : Model * Cmd<Msg> =
                 let workerModel =
@@ -280,10 +217,7 @@ type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
                       ScriptsConfig = { Location = scriptsLocation }
                       CancellationToken = ct }
 
-                let clientInit =
-                    Client.init
-                        {| CancellationToken = ct
-                           Logger = logger |}
+                let clientInit = Client.init {| CancellationToken = ct |}
 
                 let clientModel, clientCmd = clientInit
                 let msg = (FetchScripts Started) |> WorkerMsg
@@ -295,7 +229,7 @@ type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
                 let model = (workerModel, clientModel)
                 (model, cmd)
 
-            let view model dispatch = ignore
+            let view _model _dispatch = ignore
 
             let subscriptionObservers = Generic.List<IObserver<SubscriptionKind list>>()
 
@@ -323,22 +257,6 @@ type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
                         |> List.iter (fun msg -> dispatch msg))
 
                 [ [ nameof execSubscription ], execSubscription ]
-
-            //let updateWithClosure (msg: Msg) (model: Model) =
-            //    let model', cmd = update msg model
-
-            //    match msg with
-            //    | WorkerMsg msg ->
-            //        match msg with
-            //        | ExecuteScripts (Finished (Ok _)) ->
-            //            let m, _ = model'
-            //            let consume () = consumeScriptsResultAsync m
-
-            //            model',
-            //            Cmd.batch [ cmd
-            //                        Cmd.OfTask.perform consume () (fun it -> WorkerMsg it) ]
-            //        | _ -> model', cmd
-            //    | _ -> model', cmd
 
             Program.mkProgram init update view
             |> Program.withErrorHandler (fun (error: string, ex: exn) -> logger.LogError(ex, error))

@@ -4,8 +4,10 @@
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using ReactiveUI;
 using System;
 using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -39,6 +41,7 @@ namespace Xfixy.WinUI
         private string messageInp;
         // TODO: Look for a way to implement a "inverted" ListView.
         // https://github.com/AvaloniaUI/Avalonia/discussions/7596 (Didn't work)
+        public ObservableCollection<Message> MessageItems { get; set; } = new();
         public ObservableCollection<Message> OutputItems { get; set; } = new();
         #region IObserver
 
@@ -46,8 +49,12 @@ namespace Xfixy.WinUI
 
         public void Subscribe(IObservable<string> provider)
         {
-            if (provider != null)
-                unsubscriber = provider.Subscribe(this);
+            if (provider == null)
+            {
+                throw new ArgumentNullException(nameof(provider));
+            }
+            Unsubscribe();
+            unsubscriber = provider.Subscribe(this);
         }
 
         public void OnCompleted()
@@ -68,7 +75,7 @@ namespace Xfixy.WinUI
             DispatcherQueue.TryEnqueue(() =>
             {
                 messageInp = value;
-                AddItemToEnd();
+                AddMessage();
             });
         }
 
@@ -85,39 +92,42 @@ namespace Xfixy.WinUI
             var app = (App)Application.Current;
 
 #if DEBUG
-            OutputItems.Add(new("Test m1", DateTime.Now, HorizontalAlignment.Left));
-            OutputItems.Add(new("Test m2", DateTime.Now, HorizontalAlignment.Left));
-            OutputItems.Add(new("Test m3", DateTime.Now, HorizontalAlignment.Left));
-            OutputItems.Add(new("Test m4", DateTime.Now, HorizontalAlignment.Left));
-            OutputItems.Add(new("Test m5", DateTime.Now, HorizontalAlignment.Left));
-            OutputItems.Add(new("Test m6", DateTime.Now, HorizontalAlignment.Left));
-            OutputItems.Add(new("Test m7", DateTime.Now, HorizontalAlignment.Left));
+            MessageItems.Add(new("Test m1", DateTime.Now, HorizontalAlignment.Left));
+            MessageItems.Add(new("Test m2", DateTime.Now, HorizontalAlignment.Left));
+            MessageItems.Add(new("Test m3", DateTime.Now, HorizontalAlignment.Left));
+            MessageItems.Add(new("Test m4", DateTime.Now, HorizontalAlignment.Left));
+            MessageItems.Add(new("Test m5", DateTime.Now, HorizontalAlignment.Left));
+            MessageItems.Add(new("Test m6", DateTime.Now, HorizontalAlignment.Left));
+            MessageItems.Add(new("Test m7", DateTime.Now, HorizontalAlignment.Left));
 #endif
             Subscribe(app.Xfixy.OnMessage);
+
+            //this.WhenAnyValue(x => x.SearchQuery)
+            //    .Throttle(TimeSpan.FromSeconds(0.8), RxApp.TaskpoolScheduler)
+            //    .Select(query => query?.Trim())
+            //    .DistinctUntilChanged()
+            //    .Where(query => !string.IsNullOrWhiteSpace(query))
+            //    .ObserveOn(RxApp.MainThreadScheduler)
+            //    .InvokeCommand(ExecuteSearch);
 
             _appWindow = GetAppWindowForCurrentWindow();
             _appWindow.Closing += OnClosing; // Unsubscribe
         }
 
-        private void AddItemToEnd()
+        private void AddMessage()
         {
-            OutputItems.Add(
+            MessageItems.Add(
                 new Message(messageInp, DateTime.Now, HorizontalAlignment.Left)
                 );
-            //InvertedListView.Items.Add(
-            //    new Message(messageInp, DateTime.Now, HorizontalAlignment.Left)
-            //    );
         }
 
         private void OnClosing(object sender, AppWindowClosingEventArgs e)
         {
             //e.Cancel = true;
             this.Unsubscribe();
-
-            //var app = (App)Application.Current;
-            //app.WorkerCancellationTokenSource?.Cancel();
+            var app = (App)Application.Current;
+            app.WorkerCancellationTokenSource?.Cancel();
             //await Task.Delay(100);
-
             //this.Close();
         }
         private AppWindow GetAppWindowForCurrentWindow()

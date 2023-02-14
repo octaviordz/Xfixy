@@ -24,9 +24,53 @@
             <TabView.TabStripFooter>
                 <Grid x:Name="CustomDragRegion" Background="Transparent" />
             </TabView.TabStripFooter>
-            <TabViewItem x:Name="OutputTabViewItem" Header="Output" IsClosable="False">
+            <TabViewItem x:Name="MessageTabViewItem" Header="Message" IsClosable="False">
                 <TabViewItem.IconSource>
                     <SymbolIconSource Symbol="Comment" />
+                </TabViewItem.IconSource>
+                <Page x:Name="MessagePage">
+                    <Page.Resources>
+                        <DataTemplate x:Key="MessageViewTemplate" x:DataType="local:Message">
+                            <Grid Height="Auto" Margin="4">
+                                <StackPanel MinHeight="50" Padding="10, 0, 0, 10" Background="{ThemeResource SystemColorHighlightColor}" CornerRadius="{StaticResource ControlCornerRadius}">
+                                    <TextBlock Text="{x:Bind MsgText}" Padding="0, 10, 0, 0" FontSize="15" Foreground="{ThemeResource SystemColorHighlightTextColor}" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{x:Bind MsgDateTime}" Padding="0, 0, 0, 0" FontSize="12" Foreground="{ThemeResource SystemColorHighlightTextColor}"/>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </Page.Resources>
+                    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <ScrollViewer ZoomMode="Disabled"
+                                      IsTabStop="True" IsVerticalScrollChainingEnabled="True"
+                                      HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Auto">
+                            <ListView x:Name="MessageListView"
+                                      ItemTemplate="{StaticResource MessageViewTemplate}"
+                                      BorderThickness="0.1"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}"
+                                      VerticalAlignment="Stretch"
+                                      ItemsSource="{x:Bind MessageItems, Mode=OneWay}"
+                                      SelectionMode="None">
+                                <ListView.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <ItemsStackPanel ItemsUpdatingScrollMode="KeepItemsInView"
+                                                         VerticalAlignment="Top"/>
+                                    </ItemsPanelTemplate>
+                                </ListView.ItemsPanel>
+
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    </Style>
+                                </ListView.ItemContainerStyle>
+                            </ListView>
+                        </ScrollViewer>
+                    </Grid>
+                </Page>
+            </TabViewItem>
+            <TabViewItem x:Name="OutputTabViewItem" Header="Output" IsClosable="False">
+                <TabViewItem.IconSource>
+                    <SymbolIconSource Symbol="Placeholder" />
                 </TabViewItem.IconSource>
                 <Page x:Name="OutputPage">
                     <Page.Resources>
@@ -40,7 +84,6 @@
                         </DataTemplate>
                     </Page.Resources>
                     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                        
                         <ScrollViewer ZoomMode="Disabled"
                                       IsTabStop="True" IsVerticalScrollChainingEnabled="True"
                                       HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Auto"
@@ -69,9 +112,9 @@
                     </Grid>
                 </Page>
             </TabViewItem>
-            <TabViewItem x:Name="ErrorTabViewItem" Header="Error" IsClosable="False">
+            <TabViewItem x:Name="SettingsTabViewItem" IsClosable="False">
                 <TabViewItem.IconSource>
-                    <SymbolIconSource Symbol="Placeholder" />
+                    <SymbolIconSource Symbol="Setting" />
                 </TabViewItem.IconSource>
             </TabViewItem>
         </TabView>

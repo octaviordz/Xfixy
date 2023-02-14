@@ -44,6 +44,8 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.230118.102" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" />
     <Manifest Include="$(ApplicationManifest)" />
+    <PackageReference Include="ReactiveUI.WinUI" Version="18.4.20" />
+    <PackageReference Include="WindowsTerminal.WinUI3.Control" Version="1.11.3471" />
   </ItemGroup>
 
   <!-- 
