@@ -9,7 +9,7 @@
 
 	<Identity
     Name="192fb5cb-1e77-4ad5-9b8e-5824468bc850"
-    Publisher="CN=orc"
+    Publisher="CN=ORC, E=octavio.rdz@outlook.com"
     Version="0.1.7.0" />
 
 	<Properties>

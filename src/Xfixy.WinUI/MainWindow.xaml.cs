@@ -45,17 +45,7 @@ namespace Xfixy.WinUI
         public ObservableCollection<Message> OutputItems { get; set; } = new();
         #region IObserver
 
-        private IDisposable unsubscriber;
-
-        public void Subscribe(IObservable<string> provider)
-        {
-            if (provider == null)
-            {
-                throw new ArgumentNullException(nameof(provider));
-            }
-            Unsubscribe();
-            unsubscriber = provider.Subscribe(this);
-        }
+        private IDisposable unsubscriber = null;
 
         public void OnCompleted()
         {
@@ -72,11 +62,8 @@ namespace Xfixy.WinUI
         {
             // https://devblogs.microsoft.com/oldnewthing/20190328-00/?p=102368
             Console.WriteLine("The current message is {0}", value);
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                messageInp = value;
-                AddMessage();
-            });
+            messageInp = value;
+            AddMessage();
         }
 
         public void Unsubscribe()
@@ -88,9 +75,6 @@ namespace Xfixy.WinUI
         public MainWindow()
         {
             this.InitializeComponent();
-
-            var app = (App)Application.Current;
-
 #if DEBUG
             MessageItems.Add(new("Test m1", DateTime.Now, HorizontalAlignment.Left));
             MessageItems.Add(new("Test m2", DateTime.Now, HorizontalAlignment.Left));
@@ -100,15 +84,13 @@ namespace Xfixy.WinUI
             MessageItems.Add(new("Test m6", DateTime.Now, HorizontalAlignment.Left));
             MessageItems.Add(new("Test m7", DateTime.Now, HorizontalAlignment.Left));
 #endif
-            Subscribe(app.Xfixy.OnMessage);
 
-            //this.WhenAnyValue(x => x.SearchQuery)
-            //    .Throttle(TimeSpan.FromSeconds(0.8), RxApp.TaskpoolScheduler)
-            //    .Select(query => query?.Trim())
-            //    .DistinctUntilChanged()
-            //    .Where(query => !string.IsNullOrWhiteSpace(query))
-            //    .ObserveOn(RxApp.MainThreadScheduler)
-            //    .InvokeCommand(ExecuteSearch);
+            var app = (App)Application.Current;
+            
+            unsubscriber =
+                app.Xfixy.OnMessage
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(this);
 
             _appWindow = GetAppWindowForCurrentWindow();
             _appWindow.Closing += OnClosing; // Unsubscribe
@@ -123,12 +105,9 @@ namespace Xfixy.WinUI
 
         private void OnClosing(object sender, AppWindowClosingEventArgs e)
         {
-            //e.Cancel = true;
             this.Unsubscribe();
             var app = (App)Application.Current;
             app.WorkerCancellationTokenSource?.Cancel();
-            //await Task.Delay(100);
-            //this.Close();
         }
         private AppWindow GetAppWindowForCurrentWindow()
         {
