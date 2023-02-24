@@ -59,7 +59,7 @@
     <GenerateTestArtifacts>True</GenerateTestArtifacts>
     <AppxBundlePlatforms>x64</AppxBundlePlatforms>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-    <EntryPointProjectUniqueName>..\Xfixy\Xfixy.fsproj</EntryPointProjectUniqueName>
+    <EntryPointProjectUniqueName>..\Xfixy.Worker\Xfixy.Worker.fsproj</EntryPointProjectUniqueName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AppxBundle>Always</AppxBundle>
@@ -94,6 +94,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Xfixy.WinUI\Xfixy.WinUI.csproj" />
-    <ProjectReference Include="..\Xfixy\Xfixy.fsproj" />
+    <ProjectReference Include="..\Xfixy.Worker\Xfixy.Worker.fsproj" />
   </ItemGroup>
 </Project>

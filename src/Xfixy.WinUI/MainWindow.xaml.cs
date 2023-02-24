@@ -8,6 +8,7 @@ using ReactiveUI;
 using System;
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
+using System.Runtime.InteropServices;
 using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,

@@ -2,17 +2,14 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging.EventSource;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using System;
-using System.IO.Pipes;
-using System.IO;
 using System.Threading;
-using IOPath = System.IO.Path;
 using Xfixy.Server;
-using Microsoft.Extensions.Logging;
+using IOPath = System.IO.Path;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
@@ -74,8 +71,17 @@ namespace Xfixy.WinUI
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            // Microsoft.Windows.AppLifecycle.AppInstance
+            //var k = args.UWPLaunchActivatedEventArgs.Kind;
+            //if (k == ActivationKind.StartupTask)
+            //    return;
             m_window = new MainWindow();
             m_window.Activate();
+        }
+
+        internal void Activate()
+        {
+            m_window?.Activate();
         }
 
         private Window m_window;

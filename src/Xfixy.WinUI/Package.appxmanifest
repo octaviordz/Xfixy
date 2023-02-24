@@ -5,6 +5,8 @@
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+  xmlns:iot2="http://schemas.microsoft.com/appx/manifest/iot/windows10/2"
   IgnorableNamespaces="uap rescap">
 
 	<Identity
@@ -30,7 +32,8 @@
 	<Applications>
 		<Application Id="App"
 		  Executable="$targetnametoken$.exe"
-		  EntryPoint="$targetentrypoint$">
+		  EntryPoint="$targetentrypoint$"
+		  desktop4:SupportsMultipleInstances="false" >
 			<uap:VisualElements
 			  DisplayName="Xfixy.WinUI"
 			  Description="Xfixy.WinUI"
@@ -40,17 +43,6 @@
 				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
 				<uap:SplashScreen Image="Assets\SplashScreen.png" />
 			</uap:VisualElements>
-			<Extensions>
-				<desktop:Extension
-				Category="windows.startupTask"
-				Executable="Bin-assets\Xfixy\Xfixy.exe"
-				EntryPoint="Windows.FullTrustApplication">
-					<desktop:StartupTask
-					  TaskId="XfixyStartupTask"
-				  Enabled="true"
-				  DisplayName="Xfixy" />
-				</desktop:Extension>
-			</Extensions>
 		</Application>
 	</Applications>
 

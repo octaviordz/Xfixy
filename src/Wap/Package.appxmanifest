@@ -43,12 +43,12 @@
 			<Extensions>
 				<desktop:Extension
 				Category="windows.startupTask"
-				Executable="Xfixy\Xfixy.exe"
+				Executable="Xfixy.Worker\Xfixy.Worker.exe"
 				EntryPoint="Windows.FullTrustApplication">
 					<desktop:StartupTask
 					  TaskId="XfixyStartupTask"
-				  Enabled="true"
-				  DisplayName="Xfixy" />
+					  Enabled="true"
+					  DisplayName="Xfixy.Worker" />
 				</desktop:Extension>
 			</Extensions>
 		</Application>
