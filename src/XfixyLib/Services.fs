@@ -231,7 +231,7 @@ type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
 
             let view _model _dispatch = ignore
 
-            let subscriptionObservers = Generic.List<IObserver<SubscriptionKind list>>()
+            let subscriptionObservers = ResizeArray<IObserver<SubscriptionKind list>>()
 
             let subscriptionObservable =
                 { new IObservable<SubscriptionKind list> with

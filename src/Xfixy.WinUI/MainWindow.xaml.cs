@@ -87,7 +87,7 @@ namespace Xfixy.WinUI
 #endif
 
             var app = (App)Application.Current;
-            
+
             unsubscriber =
                 app.Xfixy.OnMessage
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -103,7 +103,6 @@ namespace Xfixy.WinUI
                 new Message(messageInp, DateTime.Now, HorizontalAlignment.Left)
                 );
         }
-
         private void OnClosing(object sender, AppWindowClosingEventArgs e)
         {
             this.Unsubscribe();
@@ -115,6 +114,17 @@ namespace Xfixy.WinUI
             IntPtr hWnd = WindowNative.GetWindowHandle(this);
             WindowId myWndId = Win32Interop.GetWindowIdFromWindow(hWnd);
             return AppWindow.GetFromWindowId(myWndId);
+        }
+        [DllImport("user32.dll")]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
+        public void TryActivate()
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                // Bug: https://github.com/microsoft/microsoft-ui-xaml/issues/7595
+                Activate();
+                SetForegroundWindow(WindowNative.GetWindowHandle(this));
+            });
         }
     }
 }

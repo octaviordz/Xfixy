@@ -2,6 +2,7 @@
 
 open System
 open System.Collections
+open System.Collections.Generic
 open System.IO
 open System.Threading
 open System.Management.Automation
@@ -37,7 +38,7 @@ module internal PSscript =
 
     let loadScriptsAsync (scriptFiles: string array) (ct: CancellationToken) =
         task {
-            let res = Generic.Dictionary<string, string>()
+            let res = Dictionary<string, string>()
 
             for scriptFile in scriptFiles do
                 let fi = FileInfo(scriptFile)
@@ -47,11 +48,11 @@ module internal PSscript =
                     //printfn $"Content loaded: {content}"
                     res.Add(fi.FullName, content)
 
-            return res :> Generic.IDictionary<string, string>
+            return res :> IDictionary<string, string>
         }
 
 type internal Messager() =
-    let observers = Generic.List<IObserver<string>>()
+    let observers = ResizeArray<IObserver<string>>()
 
     member public _.Push(message: string) =
         for observer in observers do
@@ -64,7 +65,7 @@ type internal Messager() =
 
             new Unsubscriber<string>(observers, observer)
 
-and internal Unsubscriber<'T>(observers: Generic.List<IObserver<'T>>, observer: IObserver<'T>) =
+and internal Unsubscriber<'T>(observers: ResizeArray<IObserver<'T>>, observer: IObserver<'T>) =
     interface IDisposable with
         member _.Dispose() : unit =
             if
@@ -73,13 +74,13 @@ and internal Unsubscriber<'T>(observers: Generic.List<IObserver<'T>>, observer: 
             then
                 observers.Remove observer |> ignore
 
-let runScriptAsync (scriptContentDict: Generic.IDictionary<string, string>) (ct: CancellationToken) =
+let runScriptAsync (scriptContentDict: IDictionary<string, string>) (ct: CancellationToken) =
     task {
-        let result = Generic.Dictionary<string, Result<string, string>>()
+        let result = Dictionary<string, Result<string, string>>()
 
         for kv in scriptContentDict do
             let scriptContent = kv.Value
-            let parameters: IDictionary = Generic.Dictionary<string, obj>()
+            let parameters: IDictionary = Dictionary<string, obj>()
             let! res = PSscript.runScriptAsync scriptContent parameters ct
 
             match res with

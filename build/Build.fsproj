@@ -12,8 +12,8 @@
 
   <ItemGroup>
     <PackageReference Include="FAKE.Core" Version="5.16.0" />
-    <PackageReference Include="Fake.Core.Target" Version="5.23.1" />
-    <PackageReference Include="Fake.DotNet.Cli" Version="5.23.1" />
+    <PackageReference Include="Fake.Core.Target" Version="6.0.0" />
+    <PackageReference Include="Fake.DotNet.Cli" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -53,7 +53,7 @@ module internal Internal =
               CancellationToken = CancellationToken.None }
             |> updater
 
-        let store = Generic.List<_>()
+        let store = ResizeArray<_>()
 
         let mkAndStartAgent init : RefAgent =
             let pipeClient = new NamedPipeClientStream(".", "Xfixy-pipe", PipeDirection.InOut)
@@ -77,7 +77,7 @@ module internal Internal =
                     let model' = { model with Outbound = x }
                     model', Cmd.none
                 | Send ->
-                    let retryList = Generic.List<string>()
+                    let retryList = ResizeArray<string>()
 
                     for message in model.Outbound do
                         logger.LogTrace(
@@ -209,7 +209,7 @@ let update (msg: Msg) (model: Model) =
         let model' = { model with RefAgent = Some refAgent }
         model', Cmd.none
     | Send ->
-        let messages = Generic.List<string>()
+        let messages = ResizeArray<string>()
 
         for kv in model.Message do
             let psResultAsString = kv.Value
