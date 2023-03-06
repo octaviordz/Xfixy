@@ -29,7 +29,6 @@ namespace Xfixy.WinUI
             }
             return 0;
         }
-
         private static bool DecideRedirection()
         {
             bool isRedirect = false;
@@ -60,7 +59,6 @@ namespace Xfixy.WinUI
             });
             redirectSemaphore.WaitOne();
         }
-
         private static void OnActivated(object sender, AppActivationArguments args)
         {
             //ExtendedActivationKind kind = args.Kind;

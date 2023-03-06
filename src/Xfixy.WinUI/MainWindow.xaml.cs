@@ -7,8 +7,11 @@ using Microsoft.UI.Xaml;
 using ReactiveUI;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
+using Windows.ApplicationModel;
+using Windows.UI.Popups;
 using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -27,7 +30,6 @@ namespace Xfixy.WinUI
             MsgDateTime = dateTime;
             MsgAlignment = align;
         }
-
         public override string ToString()
         {
             return MsgDateTime.ToString() + " " + MsgText;
@@ -38,44 +40,43 @@ namespace Xfixy.WinUI
     /// </summary>
     public sealed partial class MainWindow : Microsoft.UI.Xaml.Window, IObserver<string>
     {
-        private AppWindow _appWindow;
-        private string messageInp;
+        private readonly AppWindow _appWindow;
+        private string _messageInp;
         // TODO: Look for a way to implement a "inverted" ListView.
         // https://github.com/AvaloniaUI/Avalonia/discussions/7596 (Didn't work)
         public ObservableCollection<Message> MessageItems { get; set; } = new();
-        public ObservableCollection<Message> OutputItems { get; set; } = new();
         #region IObserver
 
-        private IDisposable unsubscriber = null;
+        private readonly IDisposable _unsubscriber = null;
 
         public void OnCompleted()
         {
-            Console.WriteLine("The Message Provider has completed transmitting data.");
-            this.Unsubscribe();
+            Debug.WriteLine("The Message Provider has completed transmitting data.");
+            Unsubscribe();
         }
 
         public void OnError(Exception e)
         {
-            Console.WriteLine("The message cannot be determined.");
+            Debug.WriteLine("The message cannot be determined.");
         }
 
         public void OnNext(string value)
         {
             // https://devblogs.microsoft.com/oldnewthing/20190328-00/?p=102368
-            Console.WriteLine("The current message is {0}", value);
-            messageInp = value;
+            Debug.WriteLine("The current message is {0}", value);
+            _messageInp = value;
             AddMessage();
         }
 
         public void Unsubscribe()
         {
-            unsubscriber?.Dispose();
+            _unsubscriber?.Dispose();
         }
         #endregion
 
         public MainWindow()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 #if DEBUG
             MessageItems.Add(new("Test m1", DateTime.Now, HorizontalAlignment.Left));
             MessageItems.Add(new("Test m2", DateTime.Now, HorizontalAlignment.Left));
@@ -88,26 +89,25 @@ namespace Xfixy.WinUI
 
             var app = (App)Application.Current;
 
-            unsubscriber =
-                app.Xfixy.OnMessage
+            _unsubscriber =
+                app.Worker.OnMessage
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(this);
 
             _appWindow = GetAppWindowForCurrentWindow();
+            void OnClosing(object sender, AppWindowClosingEventArgs e)
+            {
+                Unsubscribe();
+                var app = (App)Application.Current;
+                app.WorkerCancellationTokenSource?.Cancel();
+            }
             _appWindow.Closing += OnClosing; // Unsubscribe
         }
-
         private void AddMessage()
         {
             MessageItems.Add(
-                new Message(messageInp, DateTime.Now, HorizontalAlignment.Left)
+                new Message(_messageInp, DateTime.Now, HorizontalAlignment.Left)
                 );
-        }
-        private void OnClosing(object sender, AppWindowClosingEventArgs e)
-        {
-            this.Unsubscribe();
-            var app = (App)Application.Current;
-            app.WorkerCancellationTokenSource?.Cancel();
         }
         private AppWindow GetAppWindowForCurrentWindow()
         {
@@ -115,6 +115,9 @@ namespace Xfixy.WinUI
             WindowId myWndId = Win32Interop.GetWindowIdFromWindow(hWnd);
             return AppWindow.GetFromWindowId(myWndId);
         }
+        //[LibraryImport("user32.dll")]
+        //[return: MarshalAs(UnmanagedType.Bool)]
+        //internal static partial bool SetForegroundWindow(IntPtr hWnd);
         [DllImport("user32.dll")]
         static extern bool SetForegroundWindow(IntPtr hWnd);
         public void TryActivate()
@@ -125,6 +128,45 @@ namespace Xfixy.WinUI
                 Activate();
                 SetForegroundWindow(WindowNative.GetWindowHandle(this));
             });
+        }
+
+        private async void Button_Click(object sender, RoutedEventArgs e)
+        {
+            // https://learn.microsoft.com/en-us/uwp/api/windows.applicationmodel.startuptask?view=winrt-22621
+            StartupTask startupTask = null;
+            try
+            {
+                startupTask = await StartupTask.GetAsync("XfixyStartupTask");
+            }
+            catch (ArgumentException)
+            {
+            }
+            catch (COMException)
+            {
+            }
+            switch (startupTask?.State)
+            {
+                case StartupTaskState.Disabled:
+                    // Task is disabled but can be enabled.
+                    StartupTaskState newState = await startupTask.RequestEnableAsync(); // ensure that you are on a UI thread when you call RequestEnableAsync()
+                    Debug.WriteLine("Request to enable startup, result = {0}", newState);
+                    break;
+                case StartupTaskState.DisabledByUser:
+                    // Task is disabled and user must enable it manually.
+                    MessageDialog dialog = new(
+                        "You have disabled this app's ability to run " +
+                        "as soon as you sign in, but if you change your mind, " +
+                        "you can enable this in the Startup tab in Task Manager.",
+                        "XfixyStartup");
+                    await dialog.ShowAsync();
+                    break;
+                case StartupTaskState.DisabledByPolicy:
+                    Debug.WriteLine("Startup disabled by group policy, or not supported on this device.");
+                    break;
+                case StartupTaskState.Enabled:
+                    Debug.WriteLine("Startup is enabled.");
+                    break;
+            }
         }
     }
 }

@@ -1,5 +1,9 @@
 {
   "profiles": {
+    "Xfixy.WinUI (Unpackaged)": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    },
     "Xfixy.WinUI (Package)": {
       "commandName": "MsixPackage",
       "commandLineArgs": "", /* Command line arguments to pass to the app. */
@@ -10,9 +14,6 @@
       "doNotLaunchApp": false, /* Do not launch the app, but debug my code when it starts. */
       "remoteDebugMachine": "", /* The name of the remote machine. */
       "nativeDebugging": false /* Enable debugging for managed and native code together, also known as mixed-mode debugging. */
-    },
-    "Xfixy.WinUI (Unpackaged)": {
-      "commandName": "Project"
     }
   }
 }

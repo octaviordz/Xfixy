@@ -4,6 +4,10 @@
     <VisualStudioVersion>15.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x86">
+      <Configuration>Debug</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x86">
       <Configuration>Release</Configuration>
       <Platform>x86</Platform>
@@ -16,62 +20,27 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|ARM">
+    <ProjectConfiguration Include="Debug|arm64">
       <Configuration>Debug</Configuration>
-      <Platform>ARM</Platform>
+      <Platform>arm64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|ARM">
+    <ProjectConfiguration Include="Release|arm64">
       <Configuration>Release</Configuration>
-      <Platform>ARM</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|ARM64">
-      <Configuration>Debug</Configuration>
-      <Platform>ARM64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|ARM64">
-      <Configuration>Release</Configuration>
-      <Platform>ARM64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|AnyCPU">
-      <Configuration>Debug</Configuration>
-      <Platform>AnyCPU</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|AnyCPU">
-      <Configuration>Release</Configuration>
-      <Platform>AnyCPU</Platform>
+      <Platform>arm64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup>
     <WapProjPath Condition="'$(WapProjPath)'==''">$(MSBuildExtensionsPath)\Microsoft\DesktopBridge\</WapProjPath>
+    <PathToXAMLWinRTImplementations>Xfixy.WinUI\</PathToXAMLWinRTImplementations>
   </PropertyGroup>
   <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.props" />
   <PropertyGroup>
     <ProjectGuid>4b6de721-54e8-4241-a200-3185379ab22a</ProjectGuid>
     <TargetPlatformVersion>10.0.19041.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <AssetTargetFallback>net6.0-windows$(TargetPlatformVersion);$(AssetTargetFallback)</AssetTargetFallback>
     <DefaultLanguage>en-US</DefaultLanguage>
-    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-    <NoWarn>$(NoWarn);NU1702</NoWarn>
-    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-    <PackageCertificateThumbprint>F37CA388D4D140AC809ED05BCC1C1F26D7DA878C</PackageCertificateThumbprint>
-    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
-    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
-    <GenerateTestArtifacts>True</GenerateTestArtifacts>
-    <AppxBundlePlatforms>x64</AppxBundlePlatforms>
-    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-    <EntryPointProjectUniqueName>..\Xfixy.Worker\Xfixy.Worker.fsproj</EntryPointProjectUniqueName>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <AppxBundle>Always</AppxBundle>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <AppxBundle>Always</AppxBundle>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <AppxBundle>Always</AppxBundle>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <AppxBundle>Always</AppxBundle>
+    <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
   </PropertyGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -88,12 +57,19 @@
     <Content Include="Images\Wide310x150Logo.scale-200.png" />
     <Content Include="Local_TemporaryKey.pfx" />
   </ItemGroup>
-  <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" />
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.230217.4" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Xfixy.WinUI\Xfixy.WinUI.csproj" />
+    <ProjectReference Include="..\Xfixy.WinUI\Xfixy.WinUI.csproj">
+      <SkipGetTargetFrameworkProperties>True</SkipGetTargetFrameworkProperties>
+      <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
+    </ProjectReference>
     <ProjectReference Include="..\Xfixy.Worker\Xfixy.Worker.fsproj" />
   </ItemGroup>
+  <PropertyGroup>
+    <EntryPointProjectUniqueName>..\Xfixy.WinUI\Xfixy.WinUI.csproj</EntryPointProjectUniqueName>
+  </PropertyGroup>
+  <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" />
 </Project>
