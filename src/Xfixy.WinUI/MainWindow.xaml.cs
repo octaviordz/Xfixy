@@ -1,15 +1,17 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License.
 
-using Microsoft.UI;
-using Microsoft.UI.Windowing;
-using Microsoft.UI.Xaml;
-using ReactiveUI;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using Microsoft.FSharp.Core;
+using Microsoft.UI;
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
+using ReactiveUI;
 using Windows.ApplicationModel;
 using Windows.UI.Popups;
 using WinRT.Interop;
@@ -41,6 +43,8 @@ namespace Xfixy.WinUI
     public sealed partial class MainWindow : Microsoft.UI.Xaml.Window, IObserver<string>
     {
         private readonly AppWindow _appWindow;
+        private readonly App _app = (App)Application.Current;
+
         private string _messageInp;
         // TODO: Look for a way to implement a "inverted" ListView.
         // https://github.com/AvaloniaUI/Avalonia/discussions/7596 (Didn't work)
@@ -73,10 +77,17 @@ namespace Xfixy.WinUI
             _unsubscriber?.Dispose();
         }
         #endregion
-
+#pragma warning disable CA1822 // Mark members as static
+        public string ScriptsLocation => Funcs.GetScriptsLocation();
+        public string AppDomainBaseDirectory => AppDomain.CurrentDomain.BaseDirectory;
+#pragma warning restore CA1822 // Mark members as static
+        private FSharpFunc<Control.WorkerProcessStatus, Unit> WorkerProcessStatusFunc => FuncConvert.FromAction<Control.WorkerProcessStatus>(WorkerProcessStatus);
         public MainWindow()
         {
             InitializeComponent();
+
+            Control.CheckWorkerProcess(WorkerProcessStatusFunc);
+            WorkingDirectoryTextBox.Text = Environment.CurrentDirectory;
 #if DEBUG
             MessageItems.Add(new("Test m1", DateTime.Now, HorizontalAlignment.Left));
             MessageItems.Add(new("Test m2", DateTime.Now, HorizontalAlignment.Left));
@@ -87,10 +98,8 @@ namespace Xfixy.WinUI
             MessageItems.Add(new("Test m7", DateTime.Now, HorizontalAlignment.Left));
 #endif
 
-            var app = (App)Application.Current;
-
             _unsubscriber =
-                app.Worker.OnMessage
+                _app.Worker.OnMessage
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(this);
 
@@ -99,7 +108,7 @@ namespace Xfixy.WinUI
             {
                 Unsubscribe();
                 var app = (App)Application.Current;
-                app.WorkerCancellationTokenSource?.Cancel();
+                //app.WorkerCancellationTokenSource?.Cancel();
             }
             _appWindow.Closing += OnClosing; // Unsubscribe
         }
@@ -129,8 +138,7 @@ namespace Xfixy.WinUI
                 SetForegroundWindow(WindowNative.GetWindowHandle(this));
             });
         }
-
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private async void EnableStartupTaskButton_Click(object sender, RoutedEventArgs e)
         {
             // https://learn.microsoft.com/en-us/uwp/api/windows.applicationmodel.startuptask?view=winrt-22621
             StartupTask startupTask = null;
@@ -167,6 +175,24 @@ namespace Xfixy.WinUI
                     Debug.WriteLine("Startup is enabled.");
                     break;
             }
+        }
+        private void WorkerProcessStatus(Control.WorkerProcessStatus status)
+        {
+            if (status.IsStopped)
+            {
+                StartStopButton.Content = "Start worker.";
+            }
+            else if (status.IsRunning)
+            {
+                StartStopButton.Content = "Stop worker.";
+            }
+        }
+        private async void StartStopButton_Click(object sender, RoutedEventArgs e)
+        {
+            //await _app.Worker.StarStopAsync();
+            Control.StartStopWorkerProcess();
+            await Task.Delay(200);
+            Control.CheckWorkerProcess(WorkerProcessStatusFunc);
         }
     }
 }

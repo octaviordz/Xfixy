@@ -6,6 +6,7 @@ open System.Collections.Generic
 open System.IO
 open System.Threading
 open System.Management.Automation
+open System.Diagnostics
 
 module internal PSscript =
     /// <summary>
@@ -94,3 +95,52 @@ let runScriptAsync (scriptContentDict: IDictionary<string, string>) (ct: Cancell
 
         return result
     }
+
+[<AutoOpen>]
+module internal ExeLocation =
+    let workerProcessName = "Xfixy.Worker"
+    let workerExe = "Xfixy.Worker.exe"
+
+    let baseLocation = DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory).Parent.FullName
+
+    let workerExec =
+        [ Path.Combine(baseLocation, "Xfixy.Worker", workerExe)
+          Path.Combine(baseLocation, workerExe) ]
+        |> List.tryFind (fun it -> File.Exists(it))
+
+let getProcess processName =
+    try
+        Process.GetProcessesByName processName
+        |> Array.tryHead
+    with
+    | ex ->
+        Log.Trace(ex, (sprintf "Unable to get process %s" processName))
+        Option.None
+
+[<RequireQualifiedAccess>]
+type WorkerProcessStatus =
+    | Running of Process
+    | Stopped
+
+[<CompiledName("CheckWorkerProcess")>]
+let checkWorkerProcess handle =
+    match getProcess workerProcessName with
+    | Some p -> handle (WorkerProcessStatus.Running p)
+    | None -> handle WorkerProcessStatus.Stopped
+
+    ()
+
+[<CompiledName("StartStopWorkerProcess")>]
+let startStopWorkerProcess () =
+    checkWorkerProcess (fun status ->
+        match status with
+        | WorkerProcessStatus.Running proc -> proc.Kill(true)
+        | WorkerProcessStatus.Stopped ->
+            match workerExec with
+            | None -> ()
+            | Some workerExec ->
+                let info = ProcessStartInfo()
+                info.FileName <- workerExec
+                let p = info |> Process.Start
+                p.StartTime |> ignore
+                ())

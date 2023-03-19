@@ -1,16 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License.
 
+using System;
+using System.Threading;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
-using Microsoft.Windows.AppLifecycle;
-using System;
-using System.Threading;
 using Xfixy.Server;
-using IOPath = System.IO.Path;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
@@ -22,7 +20,7 @@ namespace Xfixy.WinUI
     /// </summary>
     public partial class App : Application
     {
-        internal Worker Worker { get; }
+        internal WorkerProxy Worker { get; }
         internal CancellationTokenSource WorkerCancellationTokenSource { get; set; }
         public Window AppWindow
         {
@@ -34,8 +32,8 @@ namespace Xfixy.WinUI
             return Host.CreateDefaultBuilder(args)
                     .ConfigureServices((hostContext, services) =>
                     {
-                        services.AddSingleton<Worker>();
-                        services.AddSingleton<IHostedService>(p => p.GetService<Worker>());
+                        services.AddSingleton<WorkerProxy>();
+                        services.AddSingleton<IHostedService>(p => p.GetService<WorkerProxy>());
                     })
                     .ConfigureLogging((hostingContext, logging) =>
                     {
@@ -55,14 +53,12 @@ namespace Xfixy.WinUI
             InitializeComponent();
             IHost host = CreateHostBuilder(args: null).Build();
             IConfiguration config = host.Services.GetRequiredService<IConfiguration>();
-            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string fullPath = IOPath.Join(localAppData, "Xfixy", "Ps1-scripts");
-            config["Worker:Scripts-Location"] = fullPath;
-            CancellationTokenSource cts = new();
-            WorkerCancellationTokenSource = cts;
-            host.StartAsync(cts.Token);
-            Worker = host.Services.GetService<Worker>();
+            config["Worker:Scripts-Location"] = Funcs.GetScriptsLocation();
+            WorkerCancellationTokenSource = new CancellationTokenSource();
+            host.StartAsync(WorkerCancellationTokenSource.Token);
+            Worker = host.Services.GetService<WorkerProxy>();
         }
+        public void StopWorkerProxy() => WorkerCancellationTokenSource.Cancel();
         /// <summary>
         /// Invoked when the application is launched.
         /// </summary>
@@ -94,6 +90,11 @@ namespace Xfixy.WinUI
             //    }
             //}
             _window = new MainWindow();
+            IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(_window);
+            Microsoft.UI.WindowId windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
+            var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
+            appWindow.Resize(new Windows.Graphics.SizeInt32 { Width = 900, Height = 800 });
+
             _window.Activate();
         }
 

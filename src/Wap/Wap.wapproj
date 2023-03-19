@@ -58,7 +58,7 @@
     <Content Include="Local_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.756" PrivateAssets="all" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.230217.4" />
   </ItemGroup>
   <ItemGroup>

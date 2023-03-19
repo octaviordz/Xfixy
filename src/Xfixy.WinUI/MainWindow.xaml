@@ -76,8 +76,50 @@
                     <Page.Resources>
                     </Page.Resources>
                     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                        <StackPanel>
-                            <Button x:Name="toggleButton" Click="Button_Click">Enable startup task.</Button>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="10*"/>
+                            <ColumnDefinition Width="3*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="2*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Background="#2f5cb6" />
+                        <Border Grid.Column ="1" Background="#1f3d7a"/>
+                        <Border Grid.Row="1" Grid.ColumnSpan="2" Background="#152951"/>
+
+                        <StackPanel Grid.Column="0" Margin="5,20,5,0"
+                                    VerticalAlignment="Top" HorizontalAlignment="Left">
+
+                            <TextBlock Foreground="White" Text="ScriptLocation"/>
+                            <TextBox x:Name="ScriptLocationTextBox"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Text="{x:Bind ScriptsLocation, Mode=OneWay}"
+                                     IsReadOnly="True" />
+
+                            <TextBlock Foreground="White" Text="AppDomainBaseDirectory"/>
+                            <TextBox x:Name="AppDomainBaseDirectoryTextBox"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Text="{x:Bind AppDomainBaseDirectory, Mode=OneWay}"
+                                     IsReadOnly="True" />
+
+                            <TextBlock Foreground="White" Text="CurrentDirectory"/>
+                            <TextBox x:Name="WorkingDirectoryTextBox"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     IsReadOnly="True" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="5,20,0,0"
+                                    VerticalAlignment="Top" HorizontalAlignment="Left">
+
+                            <Button x:Name="StartStopButton" Foreground="White" Click="StartStopButton_Click">Start worker.</Button>
+                            <Button x:Name="EnableStartupTaskButton" Foreground="White" Click="EnableStartupTaskButton_Click">Enable startup task.</Button>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
                         </StackPanel>
                     </Grid>
                 </Page>

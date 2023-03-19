@@ -1,10 +1,9 @@
-﻿using Microsoft.UI.Dispatching;
-using Microsoft.UI.Xaml;
-using Microsoft.Windows.AppLifecycle;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Activation;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
+using Microsoft.Windows.AppLifecycle;
 
 namespace Xfixy.WinUI
 {
@@ -13,7 +12,7 @@ namespace Xfixy.WinUI
     public class Program
     {
         [STAThread]
-        static int Main(string[] args)
+        static int Main()
         {
             WinRT.ComWrappersSupport.InitializeComWrappers();
             bool isRedirect = DecideRedirection();
@@ -51,7 +50,7 @@ namespace Xfixy.WinUI
         // wait method to wait for the redirection to complete.
         public static void RedirectActivationTo(AppActivationArguments args, AppInstance keyInstance)
         {
-            var redirectSemaphore = new Semaphore(0, 1);
+            Semaphore redirectSemaphore = new(0, 1);
             Task.Run(() =>
             {
                 keyInstance.RedirectActivationToAsync(args).AsTask().Wait();

@@ -9,7 +9,7 @@ open Microsoft.Extensions.Configuration
 open System.IO.Pipes
 open Xfixy.Control
 
-type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
+type WorkerProxy(logger: ILogger<WorkerProxy>, configuration: IConfiguration) =
     inherit BackgroundService()
 
     let pipeServer: NamedPipeServerStream =
