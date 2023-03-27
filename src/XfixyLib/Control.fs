@@ -31,7 +31,7 @@ module internal PSscript =
                         .InvokeAsync()
                         .WaitAsync(ct)
                         .ConfigureAwait(false)
-                // print the resulting pipeline objects to the console.
+
                 return Result.Ok pipelineObjects
             with
             | ex -> return Result.Error ex
@@ -87,8 +87,10 @@ let runScriptAsync (scriptContentDict: IDictionary<string, string>) (ct: Cancell
             match res with
             | Result.Ok psDataCollection ->
                 for item in psDataCollection do
-                    let psObjRes = item.BaseObject.ToString()
-                    let! res = PSscript.runScriptAsync scriptContent parameters ct
+                    let psObjRes =
+                        match item with
+                        | null -> String.Empty
+                        | _ -> item.BaseObject.ToString()
                     result.Add(kv.Key, (Result.Ok psObjRes))
             | Result.Error ex ->
                 result.Add(kv.Key, (Result.Error $"""Error running "{kv.Key}". Error: {ex.GetType()}."""))
@@ -101,7 +103,12 @@ module internal ExeLocation =
     let workerProcessName = "Xfixy.Worker"
     let workerExe = "Xfixy.Worker.exe"
 
-    let baseLocation = DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory).Parent.FullName
+    let baseLocation =
+        DirectoryInfo(
+            AppDomain.CurrentDomain.BaseDirectory
+        )
+            .Parent
+            .FullName
 
     let workerExec =
         [ Path.Combine(baseLocation, "Xfixy.Worker", workerExe)

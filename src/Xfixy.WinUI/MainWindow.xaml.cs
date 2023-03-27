@@ -194,5 +194,10 @@ namespace Xfixy.WinUI
             await Task.Delay(200);
             Control.CheckWorkerProcess(WorkerProcessStatusFunc);
         }
+
+        private void TestAddMessageButton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageItems.Add(new($"Test {Random.Shared.Next()}", DateTime.Now, HorizontalAlignment.Left));
+        }
     }
 }

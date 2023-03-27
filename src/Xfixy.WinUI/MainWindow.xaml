@@ -96,14 +96,14 @@
                             <TextBox x:Name="ScriptLocationTextBox"
                                      Background="Transparent"
                                      BorderThickness="0"
-                                     Text="{x:Bind ScriptsLocation, Mode=OneWay}"
+                                     Text="{x:Bind ScriptsLocation, Mode=OneTime}"
                                      IsReadOnly="True" />
 
                             <TextBlock Foreground="White" Text="AppDomainBaseDirectory"/>
                             <TextBox x:Name="AppDomainBaseDirectoryTextBox"
                                      Background="Transparent"
                                      BorderThickness="0"
-                                     Text="{x:Bind AppDomainBaseDirectory, Mode=OneWay}"
+                                     Text="{x:Bind AppDomainBaseDirectory, Mode=OneTime}"
                                      IsReadOnly="True" />
 
                             <TextBlock Foreground="White" Text="CurrentDirectory"/>
@@ -117,6 +117,7 @@
 
                             <Button x:Name="StartStopButton" Foreground="White" Click="StartStopButton_Click">Start worker.</Button>
                             <Button x:Name="EnableStartupTaskButton" Foreground="White" Click="EnableStartupTaskButton_Click">Enable startup task.</Button>
+                            <Button x:Name="TestAddMessageButton" Foreground="White" Click="TestAddMessageButton_Click">A.</Button>
                         </StackPanel>
                         <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal"
                                     HorizontalAlignment="Center" VerticalAlignment="Center">
