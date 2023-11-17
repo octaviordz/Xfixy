@@ -8,6 +8,7 @@ open Microsoft.Extensions.Logging
 open Microsoft.Extensions.Configuration
 open System.IO.Pipes
 open Xfixy.Control
+open Xfixy.Common
 
 type WorkerProxy(logger: ILogger<WorkerProxy>, configuration: IConfiguration) =
     inherit BackgroundService()
@@ -18,7 +19,7 @@ type WorkerProxy(logger: ILogger<WorkerProxy>, configuration: IConfiguration) =
     let messager = Messager()
 
     member self.OnMessage
-        with public get (): IObservable<string> = messager
+        with public get (): IObservable<Note> = messager
 
     override self.ExecuteAsync(ct: CancellationToken) =
         task {
@@ -34,10 +35,11 @@ type WorkerProxy(logger: ILogger<WorkerProxy>, configuration: IConfiguration) =
                         task {
                             let! line = sr.ReadLineAsync ct
 
-                            if not (isNull line) then
-                                messager.Push line
-
                             logger.LogTrace("[SERVER] Echo: " + line)
+
+                            if not (isNull line) then
+                                let note = Note.mkNoteFromLine line
+                                messager.Push note
 
                             if ct.IsCancellationRequested || isNull line then
                                 return ()

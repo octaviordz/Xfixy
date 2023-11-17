@@ -47,8 +47,7 @@ module internal Control =
         let Error error : FetchScriptsResult = Some(Result<unit, string>.Error error)
 
     type WorkerModel =
-        { StatusMessage: StatusMessage
-          LastFetchScriptsResult: FetchScriptsResult
+        { LastFetchScriptsResult: FetchScriptsResult
           ScriptDict: Generic.IDictionary<string, string>
           ScriptResultDict: Deferred<Generic.IDictionary<string, Result<string, string>>>
           ScriptsConfig: ScriptsConfig
@@ -62,7 +61,7 @@ module internal Control =
     type WorkerMsg =
         | FetchScripts of AsyncOperationStatus<Result<ContentDict, exn>>
         | ExecuteScripts of AsyncOperationStatus<Result<ResultDict, exn>>
-        | ConsumeScriptsCompleted
+        //| ConsumeScriptsCompleted
 
     type Msg =
         | WorkerMsg of WorkerMsg
@@ -145,42 +144,39 @@ module internal Control =
 
                 (model', cmd) |> updateWith WorkerMsg model
             | ExecuteScripts (Finished (Error ex)) ->
-                let model' =
-                    { workerModel with StatusMessage = StatusMessage.Error $"Error executing script. {ex.Message}" }
-
-                (model', Cmd.none) |> updateWith WorkerMsg model
+                let errorMessage = Client.Note.Error $"Error executing script. {ex.Message}"
+                let clientModel' = { clientModel with Note = [ errorMessage ] }
+                let completeModel = (workerModel, clientModel')
+                let msg = ClientMsg Client.Msg.Send
+                (completeModel, Cmd.ofMsg msg)
             | ExecuteScripts (Finished (Ok scriptContentDict)) ->
                 let workerModel' =
                     { workerModel with ScriptResultDict = Resolved scriptContentDict }
 
                 match scriptContentDict with
                 | dict when dict.Count > 0 ->
-                    //let message =
-                    //    seq { for x in 1 .. n do if x%2=0 then yield x }
-                    let message =
+                    let note =
                         seq {
                             for k in dict.Keys do
-                                let res = dict[k]
-
                                 let v =
                                     match dict[k] with
                                     | Ok v -> v
                                     | Error err -> err
 
-                                yield Generic.KeyValuePair(k, v)
+                                yield Client.Note.Text v
                         }
                         |> List.ofSeq
 
-                    let clientModel' = { clientModel with Message = message }
+                    let clientModel' = { clientModel with Note = note }
                     let completeModel = (workerModel', clientModel')
                     let msg = ClientMsg Client.Msg.Send
                     (completeModel, Cmd.ofMsg msg)
                 | _ ->
                     let completeModel = (workerModel', clientModel)
                     (completeModel, Cmd.none)
-            | ConsumeScriptsCompleted ->
-                (workerModel, Cmd.none)
-                |> updateWith WorkerMsg model
+            //| ConsumeScriptsCompleted ->
+            //    (workerModel, Cmd.none)
+            //    |> updateWith WorkerMsg model
 // https://learn.microsoft.com/en-us/dotnet/core/extensions/windows-service
 // New-Service -Name Xfinixy -BinaryPathName C:\Users\...\Xfixy.exe
 open Control
@@ -210,8 +206,7 @@ type Worker(logger: ILogger<Worker>, configuration: IConfiguration) =
             // Initial model and Cmd.
             let init (arg) : Model * Cmd<Msg> =
                 let workerModel =
-                    { StatusMessage = StatusMessage.None
-                      LastFetchScriptsResult = FetchScriptsResult.None
+                    { LastFetchScriptsResult = FetchScriptsResult.None
                       ScriptDict = Generic.Dictionary<string, string>()
                       ScriptResultDict = HasNotStartedYet
                       ScriptsConfig = { Location = scriptsLocation }

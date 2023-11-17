@@ -7,6 +7,7 @@ open System.IO
 open System.Threading
 open System.Management.Automation
 open System.Diagnostics
+open Xfixy.Common
 
 module internal PSscript =
     /// <summary>
@@ -53,18 +54,18 @@ module internal PSscript =
         }
 
 type internal Messager() =
-    let observers = ResizeArray<IObserver<string>>()
+    let observers = ResizeArray<IObserver<Note>>()
 
-    member public _.Push(message: string) =
+    member public _.Push(message: Note) =
         for observer in observers do
             observer.OnNext message
 
-    interface IObservable<string> with
-        member _.Subscribe(observer: IObserver<string>) : IDisposable =
+    interface IObservable<Note> with
+        member _.Subscribe(observer: IObserver<Note>) : IDisposable =
             if not (observers.Contains observer) then
                 observers.Add observer
 
-            new Unsubscriber<string>(observers, observer)
+            new Unsubscriber<Note>(observers, observer)
 
 and internal Unsubscriber<'T>(observers: ResizeArray<IObserver<'T>>, observer: IObserver<'T>) =
     interface IDisposable with

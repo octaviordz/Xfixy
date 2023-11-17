@@ -33,8 +33,19 @@
                         <DataTemplate x:Key="MessageViewTemplate" x:DataType="local:Message">
                             <Grid Height="Auto" Margin="4">
                                 <StackPanel MinHeight="50" Padding="10, 0, 0, 10" Background="{ThemeResource SystemColorHighlightColor}" CornerRadius="{StaticResource ControlCornerRadius}">
-                                    <TextBlock Text="{x:Bind MsgText}" Padding="0, 10, 0, 0" FontSize="15" Foreground="{ThemeResource SystemColorHighlightTextColor}" TextWrapping="Wrap"/>
-                                    <TextBlock Text="{x:Bind MsgDateTime}" Padding="0, 0, 0, 0" FontSize="12" Foreground="{ThemeResource SystemColorHighlightTextColor}"/>
+                                    <TextBlock Text="{x:Bind Text, Mode=OneWay}" Padding="0, 10, 0, 0" FontSize="15" Foreground="{ThemeResource SystemColorHighlightTextColor}" TextWrapping="Wrap"/>
+                                    <Grid Height="Auto" Width="Auto" Margin="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <Ellipse Grid.Column="0" Visibility="{x:Bind ErrorMarkVisibility, Mode=OneWay}" Width="8" Height="8" Fill="Red" Margin="0, 0, 4, 0" >
+                                        </Ellipse>
+                                        <TextBlock Grid.Column="1" Text="{x:Bind ReceivedAt, Mode=OneWay}" Padding="0, 0, 0, 0" FontSize="12" Foreground="{ThemeResource SystemColorHighlightTextColor}"/>
+                                    </Grid>
                                 </StackPanel>
                             </Grid>
                         </DataTemplate>

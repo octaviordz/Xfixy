@@ -13,6 +13,7 @@ if ($null -eq $connectionProfile) {
 } elseif (-Not(Test-Connection yahoo.com -Quiet -Count 1)) {
     $result = netsh wlan connect name=$profileName
 }
+Write-Output ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)
 Write-Output $result
 # XT1687 4058
 # HOME-8BA8

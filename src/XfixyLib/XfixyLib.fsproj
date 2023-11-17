@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Compile Include="Infrastructure.fs" />
+    <Compile Include="Common.fs" />
     <Compile Include="Extensions.fs" />
     <Compile Include="Control.fs" />
     <Compile Include="Server.fs" />

@@ -5,6 +5,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.FSharp.Core;
@@ -15,6 +16,7 @@ using ReactiveUI;
 using Windows.ApplicationModel;
 using Windows.UI.Popups;
 using WinRT.Interop;
+using Xfixy.Common;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -23,29 +25,20 @@ namespace Xfixy.WinUI
 {
     public class Message
     {
-        public string MsgText { get; private set; }
-        public DateTime MsgDateTime { get; private set; }
-        public HorizontalAlignment MsgAlignment { get; set; }
-        public Message(string text, DateTime dateTime, HorizontalAlignment align)
-        {
-            MsgText = text;
-            MsgDateTime = dateTime;
-            MsgAlignment = align;
-        }
-        public override string ToString()
-        {
-            return MsgDateTime.ToString() + " " + MsgText;
-        }
+        public string Text { get; internal set; }
+        public DateTime ReceivedAt { get; internal set; }
+        public HorizontalAlignment HorizontalAlignment { get; internal set; }
+        public Visibility ErrorMarkVisibility { get; internal set; }
     }
     /// <summary>
     /// An empty window that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainWindow : Microsoft.UI.Xaml.Window, IObserver<string>
+    public sealed partial class MainWindow : Microsoft.UI.Xaml.Window, IObserver<Note>
     {
         private readonly AppWindow _appWindow;
         private readonly App _app = (App)Application.Current;
 
-        private string _messageInp;
+        private Note _messageInp;
         // TODO: Look for a way to implement a "inverted" ListView.
         // https://github.com/AvaloniaUI/Avalonia/discussions/7596 (Didn't work)
         public ObservableCollection<Message> MessageItems { get; set; } = new();
@@ -64,7 +57,7 @@ namespace Xfixy.WinUI
             Debug.WriteLine("The message cannot be determined.");
         }
 
-        public void OnNext(string value)
+        public void OnNext(Note value)
         {
             // https://devblogs.microsoft.com/oldnewthing/20190328-00/?p=102368
             Debug.WriteLine("The current message is {0}", value);
@@ -89,13 +82,23 @@ namespace Xfixy.WinUI
             Control.CheckWorkerProcess(WorkerProcessStatusFunc);
             WorkingDirectoryTextBox.Text = Environment.CurrentDirectory;
 #if DEBUG
-            MessageItems.Add(new("Test m1", DateTime.Now, HorizontalAlignment.Left));
-            MessageItems.Add(new("Test m2", DateTime.Now, HorizontalAlignment.Left));
-            MessageItems.Add(new("Test m3", DateTime.Now, HorizontalAlignment.Left));
-            MessageItems.Add(new("Test m4", DateTime.Now, HorizontalAlignment.Left));
-            MessageItems.Add(new("Test m5", DateTime.Now, HorizontalAlignment.Left));
-            MessageItems.Add(new("Test m6", DateTime.Now, HorizontalAlignment.Left));
-            MessageItems.Add(new("Test m7", DateTime.Now, HorizontalAlignment.Left));
+            Message BuildTestMessage(int index, Visibility errorMarkVisibility)
+            {
+                Message message = new()
+                {
+                    ReceivedAt = DateTime.Now,
+                    Text = $"Test m{index}",
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    ErrorMarkVisibility = errorMarkVisibility
+                };
+                return message;
+            }
+            MessageItems.Add(BuildTestMessage(1, Visibility.Collapsed));
+            MessageItems.Add(BuildTestMessage(2, Visibility.Collapsed));
+            MessageItems.Add(BuildTestMessage(3, Visibility.Collapsed));
+            MessageItems.Add(BuildTestMessage(4, Visibility.Collapsed));
+            MessageItems.Add(BuildTestMessage(5, Visibility.Visible));
+            MessageItems.Add(BuildTestMessage(6, Visibility.Visible));
 #endif
 
             _unsubscriber =
@@ -114,9 +117,17 @@ namespace Xfixy.WinUI
         }
         private void AddMessage()
         {
-            MessageItems.Add(
-                new Message(_messageInp, DateTime.Now, HorizontalAlignment.Left)
-                );
+            var message = new Message
+            {
+                ReceivedAt = DateTime.Now,
+                Text = _messageInp.Note,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                ErrorMarkVisibility =
+                    _messageInp.Kind == NoteKind.Error
+                        ? Visibility.Visible
+                        : Visibility.Collapsed
+            };
+            MessageItems.Add(message);
         }
         private AppWindow GetAppWindowForCurrentWindow()
         {
@@ -197,7 +208,14 @@ namespace Xfixy.WinUI
 
         private void TestAddMessageButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageItems.Add(new($"Test {Random.Shared.Next()}", DateTime.Now, HorizontalAlignment.Left));
+            Message message = new()
+            {
+                ReceivedAt = DateTime.Now,
+                Text = $"Test {Random.Shared.Next()}",
+                HorizontalAlignment = HorizontalAlignment.Left,
+                ErrorMarkVisibility = Visibility.Visible
+            };
+            MessageItems.Add(message);
         }
     }
 }
