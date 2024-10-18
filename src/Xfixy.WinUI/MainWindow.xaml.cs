@@ -5,7 +5,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reactive.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.FSharp.Core;
@@ -41,7 +40,7 @@ namespace Xfixy.WinUI
         private Note _messageInp;
         // TODO: Look for a way to implement a "inverted" ListView.
         // https://github.com/AvaloniaUI/Avalonia/discussions/7596 (Didn't work)
-        public ObservableCollection<Message> MessageItems { get; set; } = new();
+        public ObservableCollection<Message> MessageItems { get; set; } = [];
         #region IObserver
 
         private readonly IDisposable _unsubscriber = null;
@@ -110,7 +109,7 @@ namespace Xfixy.WinUI
             void OnClosing(object sender, AppWindowClosingEventArgs e)
             {
                 Unsubscribe();
-                var app = (App)Application.Current;
+                App app = (App)Application.Current;
                 //app.WorkerCancellationTokenSource?.Cancel();
             }
             _appWindow.Closing += OnClosing; // Unsubscribe
