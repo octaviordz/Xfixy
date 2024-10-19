@@ -19,7 +19,7 @@ type Model =
       CancellationToken: CancellationToken }
 
 type Msg =
-    | StartAgent
+    | Start
     | Send
 
 [<AutoOpen>]
@@ -289,12 +289,12 @@ let init (arg: {| CancellationToken: CancellationToken |}) =
     { Note = []
       RefAgent = None
       CancellationToken = arg.CancellationToken },
-    Cmd.ofMsg StartAgent
+    Cmd.ofMsg Start
 
 
 let update (msg: Msg) (model: Model) =
     match msg with
-    | StartAgent ->
+    | Start ->
         let agentInit () =
             Agent.initWith (fun m ->
                 { m with

@@ -27,15 +27,11 @@ module internal PSscript =
             ps.AddParameters(scriptParameters) |> ignore
             // execute the script and await the result.
             try
-                let! pipelineObjects =
-                    ps
-                        .InvokeAsync()
-                        .WaitAsync(ct)
-                        .ConfigureAwait(false)
+                let! pipelineObjects = ps.InvokeAsync().WaitAsync(ct).ConfigureAwait(false)
 
                 return Result.Ok pipelineObjects
-            with
-            | ex -> return Result.Error ex
+            with ex ->
+                return Result.Error ex
         }
 
     let loadScriptsAsync (scriptFiles: string array) (ct: CancellationToken) =
@@ -70,10 +66,7 @@ type internal Messager() =
 and internal Unsubscriber<'T>(observers: ResizeArray<IObserver<'T>>, observer: IObserver<'T>) =
     interface IDisposable with
         member _.Dispose() : unit =
-            if
-                not (isNull observer)
-                && observers.Contains observer
-            then
+            if not (isNull observer) && observers.Contains observer then
                 observers.Remove observer |> ignore
 
 let runScriptAsync (scriptContentDict: IDictionary<string, string>) (ct: CancellationToken) =
@@ -92,6 +85,7 @@ let runScriptAsync (scriptContentDict: IDictionary<string, string>) (ct: Cancell
                         match item with
                         | null -> String.Empty
                         | _ -> item.BaseObject.ToString()
+
                     result.Add(kv.Key, (Result.Ok psObjRes))
             | Result.Error ex ->
                 result.Add(kv.Key, (Result.Error $"""Error running "{kv.Key}". Error: {ex.GetType()}."""))
@@ -99,56 +93,54 @@ let runScriptAsync (scriptContentDict: IDictionary<string, string>) (ct: Cancell
         return result
     }
 
-[<AutoOpen>]
-module internal ExeLocation =
+module internal WorkerLocator =
     let workerProcessName = "Xfixy.Worker"
     let workerExe = "Xfixy.Worker.exe"
 
     let baseLocation =
-        DirectoryInfo(
-            AppDomain.CurrentDomain.BaseDirectory
-        )
-            .Parent
-            .FullName
+        DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory).Parent.FullName
 
-    let workerExec =
+    let locationPath =
         [ Path.Combine(baseLocation, "Xfixy.Worker", workerExe)
           Path.Combine(baseLocation, workerExe) ]
         |> List.tryFind (fun it -> File.Exists(it))
 
 let getProcess processName =
     try
-        Process.GetProcessesByName processName
-        |> Array.tryHead
-    with
-    | ex ->
+        Process.GetProcessesByName processName |> Array.tryHead
+    with ex ->
         Log.Trace(ex, (sprintf "Unable to get process %s" processName))
         Option.None
 
 [<RequireQualifiedAccess>]
 type WorkerProcessStatus =
+    | NotFoundInPath
     | Running of Process
     | Stopped
 
+
 [<CompiledName("CheckWorkerProcess")>]
 let checkWorkerProcess handle =
-    match getProcess workerProcessName with
+    match getProcess WorkerLocator.workerProcessName with
     | Some p -> handle (WorkerProcessStatus.Running p)
     | None -> handle WorkerProcessStatus.Stopped
 
-    ()
-
 [<CompiledName("StartStopWorkerProcess")>]
 let startStopWorkerProcess () =
-    checkWorkerProcess (fun status ->
-        match status with
-        | WorkerProcessStatus.Running proc -> proc.Kill(true)
+    let handleWorkerProcessStatus =
+        function
+        | WorkerProcessStatus.NotFoundInPath ->
+            WorkerProcessStatus.NotFoundInPath 
+        | WorkerProcessStatus.Running proc ->
+            proc.Kill(true)
+            WorkerProcessStatus.Stopped
         | WorkerProcessStatus.Stopped ->
-            match workerExec with
-            | None -> ()
-            | Some workerExec ->
+            WorkerLocator.locationPath
+            |> Option.map (fun locationPath ->
                 let info = ProcessStartInfo()
-                info.FileName <- workerExec
-                let p = info |> Process.Start
-                p.StartTime |> ignore
-                ())
+                info.FileName <- locationPath
+                let p = Process.Start info
+                WorkerProcessStatus.Running p)
+            |> Option.defaultValue WorkerProcessStatus.NotFoundInPath
+
+    checkWorkerProcess handleWorkerProcessStatus

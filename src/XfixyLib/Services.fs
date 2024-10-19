@@ -1,14 +1,8 @@
 ﻿namespace Xfixy.Services
 
-open Xfixy
-open System
-open System.Diagnostics
 open System.IO
 open System.Threading
-open System.Threading.Tasks
-open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging
-open Microsoft.Extensions.Configuration
 open System.Collections
 open Elmish
 
@@ -43,7 +37,7 @@ module internal Control =
     type FetchScriptsResult = Option<Result<unit, string>>
 
     module FetchScriptsResult =
-        let Ok: FetchScriptsResult = Some(Result<unit, string>.Ok ())
+        let Ok: FetchScriptsResult = Some(Result<unit, string>.Ok())
         let Error error : FetchScriptsResult = Some(Result<unit, string>.Error error)
 
     type WorkerModel =
@@ -61,7 +55,7 @@ module internal Control =
     type WorkerMsg =
         | FetchScripts of AsyncOperationStatus<Result<ContentDict, exn>>
         | ExecuteScripts of AsyncOperationStatus<Result<ResultDict, exn>>
-        //| ConsumeScriptsCompleted
+    //| ConsumeScriptsCompleted
 
     type Msg =
         | WorkerMsg of WorkerMsg
@@ -120,13 +114,13 @@ module internal Control =
                         Cmd.OfTask.either fetch location id (fun ex -> FetchScripts(Finished(Error ex)))
 
                     (workerModel, cmd) |> updateWith WorkerMsg model
-            | FetchScripts (Finished (Error ex)) ->
+            | FetchScripts(Finished(Error ex)) ->
                 let model' =
                     { workerModel with
                         LastFetchScriptsResult = FetchScriptsResult.Error $"ScriptsPath not found: {ex.Message}" }
 
                 (model', Cmd.none) |> updateWith WorkerMsg model
-            | FetchScripts (Finished (Ok contentDict)) ->
+            | FetchScripts(Finished(Ok contentDict)) ->
                 let model' =
                     { workerModel with
                         ScriptDict = contentDict
@@ -137,21 +131,29 @@ module internal Control =
                 let scriptContentDict = workerModel.ScriptDict
                 let ct = workerModel.CancellationToken
                 let execute scriptContentDict = runScriptsAync scriptContentDict ct
-                let model' = { workerModel with ScriptResultDict = InProgress }
+
+                let model' =
+                    { workerModel with
+                        ScriptResultDict = InProgress }
 
                 let cmd =
                     Cmd.OfTask.either execute scriptContentDict id (fun ex -> ExecuteScripts(Finished(Error ex)))
 
                 (model', cmd) |> updateWith WorkerMsg model
-            | ExecuteScripts (Finished (Error ex)) ->
+            | ExecuteScripts(Finished(Error ex)) ->
                 let errorMessage = Client.Note.Error $"Error executing script. {ex.Message}"
-                let clientModel' = { clientModel with Note = [ errorMessage ] }
+
+                let clientModel' =
+                    { clientModel with
+                        Note = [ errorMessage ] }
+
                 let completeModel = (workerModel, clientModel')
                 let msg = ClientMsg Client.Msg.Send
                 (completeModel, Cmd.ofMsg msg)
-            | ExecuteScripts (Finished (Ok scriptContentDict)) ->
+            | ExecuteScripts(Finished(Ok scriptContentDict)) ->
                 let workerModel' =
-                    { workerModel with ScriptResultDict = Resolved scriptContentDict }
+                    { workerModel with
+                        ScriptResultDict = Resolved scriptContentDict }
 
                 match scriptContentDict with
                 | dict when dict.Count > 0 ->
@@ -174,8 +176,8 @@ module internal Control =
                 | _ ->
                     let completeModel = (workerModel', clientModel)
                     (completeModel, Cmd.none)
-            //| ConsumeScriptsCompleted ->
-            //    (workerModel, Cmd.none)
-            //    |> updateWith WorkerMsg model
+//| ConsumeScriptsCompleted ->
+//    (workerModel, Cmd.none)
+//    |> updateWith WorkerMsg model
 // https://learn.microsoft.com/en-us/dotnet/core/extensions/windows-service
 // New-Service -Name Xfinixy -BinaryPathName C:\Users\...\Xfixy.exe

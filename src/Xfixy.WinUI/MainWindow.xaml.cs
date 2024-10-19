@@ -74,6 +74,7 @@ namespace Xfixy.WinUI
         public string AppDomainBaseDirectory => AppDomain.CurrentDomain.BaseDirectory;
 #pragma warning restore CA1822 // Mark members as static
         private FSharpFunc<Control.WorkerProcessStatus, Unit> WorkerProcessStatusFunc => FuncConvert.FromAction<Control.WorkerProcessStatus>(WorkerProcessStatus);
+
         public MainWindow()
         {
             InitializeComponent();
