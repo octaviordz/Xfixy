@@ -5,6 +5,7 @@ open System.Threading
 open Microsoft.Extensions.Logging
 open System.Collections
 open Elmish
+open Xfixy.Control.PSscript
 
 [<AutoOpen>]
 module internal Internal =
@@ -40,20 +41,20 @@ module internal Control =
         let Ok: FetchScriptsResult = Some(Result<unit, string>.Ok())
         let Error error : FetchScriptsResult = Some(Result<unit, string>.Error error)
 
+    type ScriptContentDict = Generic.IDictionary<string, string>
+    type ResultDict = Generic.IDictionary<string, RunScriptResultEither>
+
     type WorkerModel =
         { LastFetchScriptsResult: FetchScriptsResult
-          ScriptDict: Generic.IDictionary<string, string>
-          ScriptResultDict: Deferred<Generic.IDictionary<string, Result<string, string>>>
+          ScriptDict: ScriptContentDict
+          ScriptResultDict: Deferred<ResultDict>
           ScriptsConfig: ScriptsConfig
           CancellationToken: CancellationToken }
 
     type Model = WorkerModel * Client.Model
 
-    type ContentDict = Generic.IDictionary<string, string>
-    type ResultDict = Generic.IDictionary<string, Result<string, string>>
-
     type WorkerMsg =
-        | FetchScripts of AsyncOperationStatus<Result<ContentDict, exn>>
+        | FetchScripts of AsyncOperationStatus<Result<ScriptContentDict, exn>>
         | ExecuteScripts of AsyncOperationStatus<Result<ResultDict, exn>>
     //| ConsumeScriptsCompleted
 
@@ -150,22 +151,21 @@ module internal Control =
                 let completeModel = (workerModel, clientModel')
                 let msg = ClientMsg Client.Msg.Send
                 (completeModel, Cmd.ofMsg msg)
-            | ExecuteScripts(Finished(Ok scriptContentDict)) ->
+            | ExecuteScripts(Finished(Ok resultDict)) ->
                 let workerModel' =
                     { workerModel with
-                        ScriptResultDict = Resolved scriptContentDict }
+                        ScriptResultDict = Resolved resultDict }
 
-                match scriptContentDict with
+                match resultDict with
                 | dict when dict.Count > 0 ->
                     let note =
                         seq {
                             for k in dict.Keys do
-                                let v =
-                                    match dict[k] with
-                                    | Ok v -> v
-                                    | Error err -> err
-
-                                yield Client.Note.Text v
+                                match dict[k] with
+                                | ExecuteResult.Output output ->
+                                    for v in output do
+                                        yield Client.Note.Text v
+                                | ExecuteResult.Error ex -> yield Client.Note.Text(ex.ToString())
                         }
                         |> List.ofSeq
 

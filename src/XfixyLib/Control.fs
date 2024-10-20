@@ -10,6 +10,11 @@ open System.Diagnostics
 open Xfixy.Common
 
 module internal PSscript =
+    [<StructuralEquality; StructuralComparison; Struct; RequireQualifiedAccess>]
+    type ExecuteResult<'T,'TError> =
+      | Output of ResultValue: 'T
+      | Error of ErrorValue: 'TError
+
     /// <summary>
     /// Runs a PowerShell script with parameters and prints the resulting pipeline objects to the console output.
     /// </summary>
@@ -29,9 +34,9 @@ module internal PSscript =
             try
                 let! pipelineObjects = ps.InvokeAsync().WaitAsync(ct).ConfigureAwait(false)
 
-                return Result.Ok pipelineObjects
+                return ExecuteResult.Output pipelineObjects
             with ex ->
-                return Result.Error ex
+                return ExecuteResult.Error ex
         }
 
     let loadScriptsAsync (scriptFiles: string array) (ct: CancellationToken) =
@@ -48,6 +53,7 @@ module internal PSscript =
 
             return res :> IDictionary<string, string>
         }
+open PSscript
 
 type internal Messager() =
     let observers = ResizeArray<IObserver<Note>>()
@@ -69,9 +75,12 @@ and internal Unsubscriber<'T>(observers: ResizeArray<IObserver<'T>>, observer: I
             if not (isNull observer) && observers.Contains observer then
                 observers.Remove observer |> ignore
 
-let runScriptAsync (scriptContentDict: IDictionary<string, string>) (ct: CancellationToken) =
+type internal RunScriptResultEither = ExecuteResult<ResizeArray<string>, exn>
+type internal RunScriptResult = Dictionary<string, RunScriptResultEither>
+
+let internal runScriptAsync (scriptContentDict: IDictionary<string, string>) (ct: CancellationToken) =
     task {
-        let result = Dictionary<string, Result<string, string>>()
+        let result  = RunScriptResult()
 
         for kv in scriptContentDict do
             let scriptContent = kv.Value
@@ -79,16 +88,21 @@ let runScriptAsync (scriptContentDict: IDictionary<string, string>) (ct: Cancell
             let! res = PSscript.runScriptAsync scriptContent parameters ct
 
             match res with
-            | Result.Ok psDataCollection ->
+            | ExecuteResult.Output psDataCollection ->
+                let results = ResizeArray<string>()
                 for item in psDataCollection do
                     let psObjRes =
                         match item with
                         | null -> String.Empty
                         | _ -> item.BaseObject.ToString()
-
-                    result.Add(kv.Key, (Result.Ok psObjRes))
-            | Result.Error ex ->
-                result.Add(kv.Key, (Result.Error $"""Error running "{kv.Key}". Error: {ex.GetType()}."""))
+                    results.Add psObjRes
+                if result.ContainsKey(kv.Key) then
+                    result.[kv.Key] <- (ExecuteResult.Output results)
+                else
+                    result.Add(kv.Key, (ExecuteResult.Output results))
+            | ExecuteResult.Error ex ->
+                let ex = Exception($"""Error running "{kv.Key}". Error: {ex.GetType()}.""", ex)
+                result.Add(kv.Key, (ExecuteResult.Error ex))
 
         return result
     }
@@ -129,8 +143,7 @@ let checkWorkerProcess handle =
 let startStopWorkerProcess () =
     let handleWorkerProcessStatus =
         function
-        | WorkerProcessStatus.NotFoundInPath ->
-            WorkerProcessStatus.NotFoundInPath 
+        | WorkerProcessStatus.NotFoundInPath -> WorkerProcessStatus.NotFoundInPath
         | WorkerProcessStatus.Running proc ->
             proc.Kill(true)
             WorkerProcessStatus.Stopped

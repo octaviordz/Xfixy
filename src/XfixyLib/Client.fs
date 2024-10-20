@@ -7,6 +7,7 @@ open System.Threading
 open System.IO.Pipes
 open Elmish
 
+
 type RefAgent = int
 
 type Note =
@@ -48,6 +49,7 @@ module internal Internal =
             | Send of string list
             | FetchModel of AsyncReplyChannel<Model>
 
+
         type Msg = Send of Outbound: string list
 
         type Message =
@@ -62,18 +64,27 @@ module internal Internal =
               CancellationToken = CancellationToken.None }
             |> updater
 
-        let store = ResizeArray<_>()
+        type StoreItem =
+            { agent: MailboxProcessor<MailboxMsg>
+              pipeClient: NamedPipeClientStream }
+
+        let store = ResizeArray<StoreItem>()
 
         let mkAndStartAgent init : RefAgent =
-            let mutable pipeClient: NamedPipeClientStream = Unchecked.defaultof<_>
+            let pipeClient: NamedPipeClientStream =
+                new NamedPipeClientStream(".", "Xfixy-pipe", PipeDirection.InOut)
 
-            let connectPipe () =
-                pipeClient <- new NamedPipeClientStream(".", "Xfixy-pipe", PipeDirection.InOut)
+            let connectPipeClient (pipeClient: NamedPipeClientStream) =
+                //let pipeClient = new NamedPipeClientStream(".", "Xfixy-pipe", PipeDirection.InOut)
+                if pipeClient.IsConnected then
+                    pipeClient
+                else
+                    try
+                        pipeClient.Connect(200)
+                    with :? TimeoutException as ex ->
+                        logger.LogTrace(ex, "Timeout error.")
 
-                try
-                    pipeClient.Connect(200)
-                with :? TimeoutException as ex ->
-                    logger.LogTrace(ex, "Timeout error.")
+                    pipeClient
 
             let mutable interactor =
                 {| State = Model.Empty
@@ -93,7 +104,9 @@ module internal Internal =
 
                 let writeAsync (pipeClient: NamedPipeClientStream) =
                     task {
+
                         let retryList = ResizeArray<string>()
+
                         for message in model.Outbound do
                             logger.LogTrace(
                                 """Sending message "{message}". RetryCount: {retryCount}""",
@@ -143,7 +156,7 @@ module internal Internal =
                     }
 
                 let ofError ex = Send(Finished(Result.Error ex))
-
+                let pipeClient = connectPipeClient pipeClient
                 Cmd.OfTask.either writeAsync pipeClient id ofError
 
             let update (msg: Message) (model: Model) =
@@ -272,11 +285,15 @@ module internal Internal =
                     // start the loop
                     messageLoop ())
 
-            store.Add agent
+            store.Add
+                { agent = agent
+                  pipeClient = pipeClient }
+
             (store.Count - 1)
 
         let post (refAgent: RefAgent) (msg: Msg) =
-            let agent = store[refAgent]
+            let it = store[refAgent]
+            let agent = it.agent
             //let model = agent.PostAndReply(fun replyChannel -> FetchModel replyChannel)
             match msg with
             | Msg.Send x -> agent.Post(MailboxMsg.Send x)
