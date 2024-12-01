@@ -7,11 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Library.fs" />
+    <Compile Include="Setting.fs" />
+    <Compile Include="Main.fs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Elmish" Version="4.0.1" />
+    <PackageReference Include="Elmish" Version="4.2.0" />
   </ItemGroup>
 
 </Project>
